@@ -8,7 +8,6 @@ pub struct HoleCards {
 
 impl HoleCards {
     pub fn new(card1: Card, card2: Card) -> Self {
-        // Ordonne les cartes par valeur décroissante pour uniformité
         let cards = if card1.value >= card2.value {
             [card1, card2]
         } else {

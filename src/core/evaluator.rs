@@ -19,18 +19,14 @@ pub trait HandEvaluator {
 pub struct LookupEvaluator {
     /// Table pour évaluer les flush (8192 entrées = 2^13 combinaisons de rangs)
     flush_table: Box<[u16; 8192]>,
-    /// Table pour les mains sans paires (quintes et high cards)
-    unique_table: Box<[u16; 8192]>,
 }
 
 impl LookupEvaluator {
     pub fn new() -> Self {
         let flush_table = Self::generate_flush_table();
-        let unique_table = Self::generate_unique_table();
 
         Self {
             flush_table,
-            unique_table,
         }
     }
 
@@ -65,35 +61,7 @@ impl LookupEvaluator {
         table
     }
 
-    /// Génère la table des mains à rangs uniques (pas de paires)
-    fn generate_unique_table() -> Box<[u16; 8192]> {
-        let mut table = Box::new([0u16; 8192]);
 
-        // Pour chaque combinaison de 5 rangs parmi 13
-        for c1 in 0..13u8 {
-            for c2 in (c1 + 1)..13 {
-                for c3 in (c2 + 1)..13 {
-                    for c4 in (c3 + 1)..13 {
-                        for c5 in (c4 + 1)..13 {
-                            let key = (1 << c1) | (1 << c2) | (1 << c3) | (1 << c4) | (1 << c5);
-                            let ranks = [c5, c4, c3, c2, c1];
-
-                            if let Some(high) = Self::is_straight_ranks(&ranks) {
-                                // Quinte: catégorie 4
-                                table[key as usize] = 4000 + high as u16;
-                            } else {
-                                // High card: catégorie 0
-                                let score = Self::encode_high_card_score(&ranks);
-                                table[key as usize] = score;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        table
-    }
 
     fn is_straight_ranks(ranks: &[u8; 5]) -> Option<u8> {
         let high = ranks[0];
