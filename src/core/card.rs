@@ -15,6 +15,20 @@ pub enum Value {
     Ace,
 }
 
+impl Value {
+    pub fn from_char(c: char) -> Option<Self> {
+        Self::try_from(c).ok()
+    }
+
+    pub fn to_char(self) -> char {
+        char::from(self)
+    }
+
+    pub fn all_values() -> &'static [Value] {
+        &VALUES
+    }
+}
+
 #[derive(PartialEq, PartialOrd, Eq, Ord, Debug, Clone, Copy, Hash)]
 pub enum Suit {
     Hearts,
@@ -133,7 +147,7 @@ impl From<Suit> for char {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Copy, Hash)]
 pub struct Card {
     pub value: Value,
     pub suit: Suit,

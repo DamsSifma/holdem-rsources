@@ -1,6 +1,6 @@
 use holdem_rsources::core::{
     Card, CardSet, Hand, HoleCards, LookupEvaluator, HandEvaluator,
-    EquityCalculator,
+    EquityCalculator, Range,
 };
 use std::time::Instant;
 
@@ -17,6 +17,8 @@ fn main() {
     demo_equity_preflop();
     println!("\n{}\n", "─".repeat(60));
     demo_equity_postflop();
+    println!("\n{}\n", "─".repeat(60));
+    demo_ranges();
     println!("\n{}\n", "─".repeat(60));
     demo_cardset_operations();
 }
@@ -200,9 +202,95 @@ fn demo_equity_postflop() {
     }
 }
 
-/// Démo 5: Opérations sur les CardSet
+/// Démo 5: Utilisation des Ranges
+fn demo_ranges() {
+    println!("🎲 DEMO 5: Poker Ranges");
+    println!("{}", "─".repeat(60));
+
+    // Parsing de ranges
+    println!("  📝 Parsing de ranges:");
+    let ranges = vec![
+        "AA",
+        "QQ+",
+        "AKs",
+        "ATs+",
+        "AKo",
+        "AQo+",
+        "JTs, T9s, 98s",
+        "TT+, AK, AQ",
+    ];
+
+    for range_str in ranges {
+        let range = Range::from_str(range_str).unwrap();
+        let breakdown = range.combo_breakdown(None);
+        println!("    {:20} → {}", range_str, breakdown);
+    }
+
+    // Équité range vs main
+    println!("\n  ⚔️  Range vs Hand Equity:");
+    let opening_range = Range::from_str("QQ+, AK").unwrap();
+    let villain_hand = HoleCards::from_str("JdJc").unwrap();
+
+    println!("    Range: QQ+, AK");
+    println!("    vs Hand: {}", villain_hand);
+
+    let calculator = EquityCalculator::new();
+    let start = Instant::now();
+    let result = calculator.calculate_range_vs_hand(&opening_range, &villain_hand, &[], 1000);
+    let duration = start.elapsed();
+
+    println!("    Range equity: {:.1}%", result.range_percent());
+    println!("    Hand equity:  {:.1}%", result.opponent_percent());
+    println!("    ({} combos, {} sims in {:?})",
+             result.combos_evaluated, result.total_simulations, duration);
+
+    // Équité range vs range
+    println!("\n  🎯 Range vs Range Equity:");
+    let hero_range = Range::from_str("TT+, AK, AQ").unwrap();
+    let villain_range = Range::from_str("77+, AJ+, KQ").unwrap();
+
+    println!("    Hero:    TT+, AK, AQ");
+    println!("    Villain: 77+, AJ+, KQ");
+
+    let start = Instant::now();
+    let result = calculator.calculate_range_vs_range(&hero_range, &villain_range, &[], 500);
+    let duration = start.elapsed();
+
+    println!("    Hero equity:    {:.1}%", result.range_percent());
+    println!("    Villain equity: {:.1}%", result.opponent_percent());
+    println!("    ({} matchups, {} sims in {:?})",
+             result.combos_evaluated, result.total_simulations, duration);
+
+    // Range avec dead cards
+    println!("\n  🎴 Range avec dead cards:");
+    let range = Range::from_str("AA").unwrap();
+    println!("    Range: AA");
+    println!("    Sans dead cards: {} combos", range.combo_count(None));
+
+    let mut dead = CardSet::new();
+    dead.insert(Card::try_from("Ah").unwrap());
+    println!("    Avec Ah mort:    {} combos", range.combo_count(Some(dead)));
+
+    dead.insert(Card::try_from("As").unwrap());
+    println!("    Avec Ah,As morts: {} combo", range.combo_count(Some(dead)));
+
+    // Conversion en hole cards
+    println!("\n  🃏 Génération de combos:");
+    let range = Range::from_str("KK").unwrap();
+    let combos = range.to_hole_cards(None);
+    print!("    KK → ");
+    for (i, combo) in combos.iter().enumerate() {
+        print!("{}", combo);
+        if i < combos.len() - 1 {
+            print!(", ");
+        }
+    }
+    println!();
+}
+
+/// Démo 6: Opérations sur les CardSet
 fn demo_cardset_operations() {
-    println!("🃏 DEMO 5: CardSet Operations");
+    println!("🃏 DEMO 6: CardSet Operations");
     println!("{}", "─".repeat(60));
 
     let hand1 = HoleCards::from_str("AhKh").unwrap();

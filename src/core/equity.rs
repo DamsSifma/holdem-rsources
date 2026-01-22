@@ -2,6 +2,7 @@ use super::card::Card;
 use super::card_set::CardSet;
 use super::hand::{Hand, HoleCards};
 use super::evaluator::{HandEvaluator, LookupEvaluator};
+use super::range::Range;
 use rand::seq::SliceRandom;
 
 #[derive(Debug, Clone, Copy)]
@@ -254,6 +255,153 @@ impl EquityCalculator {
                 total,
             );
         }
+    }
+
+    /// Calcule l'équité d'une range contre une main spécifique
+    /// # Arguments
+    /// * `range` - Range du joueur 1
+    /// * `hole2` - Main du joueur 2
+    /// * `board` - Cards already on the board
+    /// * `iterations` - Number of Monte Carlo simulations per combo
+    pub fn calculate_range_vs_hand(
+        &self,
+        range: &Range,
+        hole2: &HoleCards,
+        board: &[Card],
+        iterations_per_combo: usize,
+    ) -> RangeEquityResult {
+        let mut dead_cards = CardSet::from_cards(&[hole2.high(), hole2.low()]);
+        for card in board {
+            dead_cards.insert(*card);
+        }
+
+        let combos = range.to_hole_cards(Some(dead_cards));
+
+        if combos.is_empty() {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 1.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        let mut total_range_wins = 0.0;
+        let mut total_opponent_wins = 0.0;
+        let mut total_ties = 0.0;
+        let total_simulations = combos.len() * iterations_per_combo;
+
+        for hole1 in &combos {
+            let result = self.calculate_monte_carlo(hole1, hole2, board, iterations_per_combo);
+            total_range_wins += result.player1_equity;
+            total_opponent_wins += result.player2_equity;
+            total_ties += result.tie_equity;
+        }
+
+        let num_combos = combos.len() as f64;
+        RangeEquityResult {
+            range_equity: total_range_wins / num_combos,
+            opponent_equity: total_opponent_wins / num_combos,
+            tie_equity: total_ties / num_combos,
+            combos_evaluated: combos.len(),
+            total_simulations,
+        }
+    }
+
+    /// Calcule l'équité range vs range
+    /// # Arguments
+    /// * `range1` - Range du joueur 1
+    /// * `range2` - Range du joueur 2
+    /// * `board` - Cards already on the board
+    /// * `iterations` - Number of Monte Carlo simulations per matchup
+    pub fn calculate_range_vs_range(
+        &self,
+        range1: &Range,
+        range2: &Range,
+        board: &[Card],
+        iterations_per_matchup: usize,
+    ) -> RangeEquityResult {
+        let mut board_cards = CardSet::new();
+        for card in board {
+            board_cards.insert(*card);
+        }
+
+        let combos1 = range1.to_hole_cards(Some(board_cards));
+        let combos2 = range2.to_hole_cards(Some(board_cards));
+
+        if combos1.is_empty() || combos2.is_empty() {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 0.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        let mut total_range1_wins = 0.0;
+        let mut total_range2_wins = 0.0;
+        let mut total_ties = 0.0;
+        let mut matchups = 0usize;
+
+        for hole1 in &combos1 {
+            for hole2 in &combos2 {
+                // Vérifier qu'il n'y a pas de cartes en commun
+                if hole1.high() == hole2.high() || hole1.high() == hole2.low()
+                    || hole1.low() == hole2.high() || hole1.low() == hole2.low() {
+                    continue;
+                }
+
+                let result = self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup);
+                total_range1_wins += result.player1_equity;
+                total_range2_wins += result.player2_equity;
+                total_ties += result.tie_equity;
+                matchups += 1;
+            }
+        }
+
+        if matchups == 0 {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 0.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        let num_matchups = matchups as f64;
+        RangeEquityResult {
+            range_equity: total_range1_wins / num_matchups,
+            opponent_equity: total_range2_wins / num_matchups,
+            tie_equity: total_ties / num_matchups,
+            combos_evaluated: matchups,
+            total_simulations: matchups * iterations_per_matchup,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RangeEquityResult {
+    pub range_equity: f64,
+    pub opponent_equity: f64,
+    pub tie_equity: f64,
+    pub combos_evaluated: usize,
+    pub total_simulations: usize,
+}
+
+impl RangeEquityResult {
+    pub fn range_percent(&self) -> f64 {
+        self.range_equity * 100.0
+    }
+
+    pub fn opponent_percent(&self) -> f64 {
+        self.opponent_equity * 100.0
+    }
+
+    pub fn tie_percent(&self) -> f64 {
+        self.tie_equity * 100.0
     }
 }
 

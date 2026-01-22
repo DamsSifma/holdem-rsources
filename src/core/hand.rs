@@ -8,7 +8,7 @@ pub struct HoleCards {
 
 impl HoleCards {
     pub fn new(card1: Card, card2: Card) -> Self {
-        let cards = if card1.value >= card2.value {
+        let cards = if card1 >= card2 {
             [card1, card2]
         } else {
             [card2, card1]
