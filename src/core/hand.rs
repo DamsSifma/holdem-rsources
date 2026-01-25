@@ -1,5 +1,6 @@
 use super::card::Card;
 use super::card_set::CardSet;
+use std::str::FromStr;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct HoleCards {
@@ -46,7 +47,7 @@ impl HoleCards {
         &self.cards
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         let s = s.trim();
         if s.len() == 4 {
             let card1 = Card::try_from(&s[0..2]).ok()?;
@@ -64,11 +65,19 @@ impl std::fmt::Display for HoleCards {
     }
 }
 
+impl FromStr for HoleCards {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s).ok_or_else(|| format!("Invalid hole cards format: '{}'", s))
+    }
+}
+
 impl TryFrom<&str> for HoleCards {
     type Error = ();
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        Self::from_str(s).ok_or(())
+        Self::parse(s).ok_or(())
     }
 }
 
@@ -130,11 +139,32 @@ impl Hand {
     pub fn iter(&self) -> impl Iterator<Item = Card> {
         self.cards.iter()
     }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        let cards: Vec<Card> = s
+            .split_whitespace()
+            .filter_map(|card_str| Card::try_from(card_str).ok())
+            .collect();
+        
+        if cards.is_empty() {
+            None
+        } else {
+            Some(Self::from_cards(&cards))
+        }
+    }
 }
 
 impl Default for Hand {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl FromStr for Hand {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s).ok_or_else(|| format!("Invalid hand format: '{}'", s))
     }
 }
 

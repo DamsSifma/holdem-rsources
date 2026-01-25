@@ -2,6 +2,7 @@
 ///
 /// Ce fichier montre différents cas d'usage pratiques des ranges
 use holdem_rsources::core::{Card, CardSet, EquityCalculator, Range};
+use std::str::FromStr;
 
 fn main() {
     println!("=== Exemples Avancés de Ranges ===\n");

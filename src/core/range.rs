@@ -3,6 +3,7 @@ use super::card_set::CardSet;
 use super::hand::HoleCards;
 use std::collections::HashSet;
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Range {
@@ -29,7 +30,7 @@ impl Range {
         }
     }
 
-    pub fn from_str(s: &str) -> Result<Self, RangeParseError> {
+    pub fn parse(s: &str) -> Result<Self, RangeParseError> {
         let mut range = Range::new();
 
         for part in s.split(',') {
@@ -48,7 +49,7 @@ impl Range {
     /// Convertit la range en une liste de HoleCards, en tenant compte des cartes mortes
     pub fn to_hole_cards(&self, dead_cards: Option<CardSet>) -> Vec<HoleCards> {
         let mut result = Vec::new();
-        let dead = dead_cards.unwrap_or(CardSet::new());
+        let dead = dead_cards.unwrap_or_default();
 
         for pattern in &self.hands {
             result.extend(pattern.to_hole_cards(&dead));
@@ -105,6 +106,14 @@ impl Default for Range {
     }
 }
 
+impl FromStr for Range {
+    type Err = RangeParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s)
+    }
+}
+
 /// Breakdown des combos par type
 #[derive(Clone, Debug, PartialEq)]
 pub struct ComboBreakdown {
@@ -128,8 +137,8 @@ impl HandPattern {
     fn parse(s: &str) -> Result<Self, RangeParseError> {
         let s = s.trim();
 
-        let (base, is_plus) = if s.ends_with('+') {
-            (&s[..s.len() - 1], true)
+        let (base, is_plus) = if let Some(stripped) = s.strip_suffix('+') {
+            (stripped, true)
         } else {
             (s, false)
         };

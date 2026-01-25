@@ -1,6 +1,7 @@
 use holdem_rsources::core::{
     Card, CardSet, EquityCalculator, Hand, HandEvaluator, HoleCards, LookupEvaluator, Range,
 };
+use std::str::FromStr;
 use std::time::Instant;
 
 fn main() {

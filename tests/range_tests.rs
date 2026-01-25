@@ -1,4 +1,6 @@
 use holdem_rsources::core::{Card, CardSet, EquityCalculator, HoleCards, Range};
+use std::str::FromStr;
+
 #[macro_use]
 mod test_utils;
 use test_utils::TOLERANCE;

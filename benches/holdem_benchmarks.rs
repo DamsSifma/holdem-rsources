@@ -1,6 +1,7 @@
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use holdem_rsources::core::*;
 use std::hint::black_box;
+use std::str::FromStr;
 
 fn bench_hand_evaluation(c: &mut Criterion) {
     let evaluator = LookupEvaluator::new();

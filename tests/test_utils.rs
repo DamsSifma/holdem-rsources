@@ -1,7 +1,7 @@
 /// Default tolerance for percentage calculations (1%)
 pub const TOLERANCE: f64 = 1.0;
 
-/// Default strict tolerance for percentage calculations (0.1%)
+#[allow(dead_code)]
 pub const STRICT_TOLERANCE: f64 = 0.1;
 
 #[macro_export]

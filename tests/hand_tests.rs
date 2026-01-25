@@ -1,4 +1,5 @@
 use holdem_rsources::core::{Card, Hand, HoleCards, Suit, Value};
+use std::str::FromStr;
 
 #[test]
 fn test_hole_cards() {

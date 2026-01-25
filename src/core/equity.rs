@@ -31,6 +31,16 @@ pub struct EquityCalculator {
     evaluator: LookupEvaluator,
 }
 
+struct EnumerationContext<'a> {
+    board: &'a [Card],
+    hole1: &'a HoleCards,
+    hole2: &'a HoleCards,
+    p1_wins: &'a mut usize,
+    p2_wins: &'a mut usize,
+    ties: &'a mut usize,
+    total: &'a mut usize,
+}
+
 impl EquityCalculator {
     pub fn new() -> Self {
         Self {
@@ -97,17 +107,17 @@ impl EquityCalculator {
         let mut ties = 0usize;
         let mut total = 0usize;
 
-        self.enumerate_combinations(
-            &available_cards,
-            cards_needed,
+        let mut indices = vec![0; cards_needed];
+        let mut ctx = EnumerationContext {
             board,
             hole1,
             hole2,
-            &mut p1_wins,
-            &mut p2_wins,
-            &mut ties,
-            &mut total,
-        );
+            p1_wins: &mut p1_wins,
+            p2_wins: &mut p2_wins,
+            ties: &mut ties,
+            total: &mut total,
+        };
+        self.enumerate_helper(&available_cards, &mut indices, 0, 0, &mut ctx);
 
         EquityResult {
             player1_equity: (p1_wins as f64 + ties as f64 / 2.0) / total as f64,
@@ -186,84 +196,38 @@ impl EquityCalculator {
         hand
     }
 
-    fn enumerate_combinations(
-        &self,
-        available: &[Card],
-        needed: usize,
-        board: &[Card],
-        hole1: &HoleCards,
-        hole2: &HoleCards,
-        p1_wins: &mut usize,
-        p2_wins: &mut usize,
-        ties: &mut usize,
-        total: &mut usize,
-    ) {
-        let mut indices = vec![0; needed];
-        self.enumerate_helper(
-            available,
-            &mut indices,
-            0,
-            0,
-            board,
-            hole1,
-            hole2,
-            p1_wins,
-            p2_wins,
-            ties,
-            total,
-        );
-    }
-
     fn enumerate_helper(
         &self,
         available: &[Card],
         indices: &mut [usize],
         depth: usize,
         start: usize,
-        board: &[Card],
-        hole1: &HoleCards,
-        hole2: &HoleCards,
-        p1_wins: &mut usize,
-        p2_wins: &mut usize,
-        ties: &mut usize,
-        total: &mut usize,
+        ctx: &mut EnumerationContext,
     ) {
         if depth == indices.len() {
-            let mut full_board = board.to_vec();
+            let mut full_board = ctx.board.to_vec();
             for &idx in indices.iter() {
                 full_board.push(available[idx]);
             }
 
-            let hand1 = self.build_hand(hole1, &full_board);
-            let hand2 = self.build_hand(hole2, &full_board);
+            let hand1 = self.build_hand(ctx.hole1, &full_board);
+            let hand2 = self.build_hand(ctx.hole2, &full_board);
 
             let rank1 = self.evaluator.evaluate(&hand1);
             let rank2 = self.evaluator.evaluate(&hand2);
 
             match rank1.cmp(&rank2) {
-                std::cmp::Ordering::Greater => *p1_wins += 1,
-                std::cmp::Ordering::Less => *p2_wins += 1,
-                std::cmp::Ordering::Equal => *ties += 1,
+                std::cmp::Ordering::Greater => *ctx.p1_wins += 1,
+                std::cmp::Ordering::Less => *ctx.p2_wins += 1,
+                std::cmp::Ordering::Equal => *ctx.ties += 1,
             }
-            *total += 1;
+            *ctx.total += 1;
             return;
         }
 
         for i in start..available.len() {
             indices[depth] = i;
-            self.enumerate_helper(
-                available,
-                indices,
-                depth + 1,
-                i + 1,
-                board,
-                hole1,
-                hole2,
-                p1_wins,
-                p2_wins,
-                ties,
-                total,
-            );
+            self.enumerate_helper(available, indices, depth + 1, i + 1, ctx);
         }
     }
 
