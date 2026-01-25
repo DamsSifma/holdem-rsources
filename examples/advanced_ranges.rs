@@ -1,8 +1,7 @@
 /// Exemples avancés d'utilisation des ranges de poker
 ///
 /// Ce fichier montre différents cas d'usage pratiques des ranges
-
-use holdem_rsources::core::{Range, Card, CardSet, EquityCalculator};
+use holdem_rsources::core::{Card, CardSet, EquityCalculator, Range};
 
 fn main() {
     println!("=== Exemples Avancés de Ranges ===\n");
@@ -28,8 +27,14 @@ fn example_position_ranges() {
         ("UTG", "77+, ATs+, AJo+, KQs"),
         ("MP", "66+, A9s+, ATo+, KJs+, KQo, QJs"),
         ("CO", "55+, A7s+, A9o+, K9s+, KTo+, QTs+, JTs"),
-        ("BTN", "22+, A2s+, A5o+, K6s+, K9o+, Q8s+, QTo+, J8s+, T8s+, 98s"),
-        ("SB", "22+, A2s+, A7o+, K2s+, K9o+, Q5s+, Q9o+, J7s+, T7s+, 97s+, 87s"),
+        (
+            "BTN",
+            "22+, A2s+, A5o+, K6s+, K9o+, Q8s+, QTo+, J8s+, T8s+, 98s",
+        ),
+        (
+            "SB",
+            "22+, A2s+, A7o+, K2s+, K9o+, Q5s+, Q9o+, J7s+, T7s+, 97s+, 87s",
+        ),
     ];
 
     for (position, range_str) in positions {
@@ -72,8 +77,11 @@ fn example_3bet_ranges() {
     let total_3bet = btn_3bet_value.combo_count(None) + btn_3bet_bluff.combo_count(None);
     let value_ratio = (btn_3bet_value.combo_count(None) as f64 / total_3bet as f64) * 100.0;
 
-    println!("\n  Ratio Value/Bluff: {:.0}% value / {:.0}% bluff",
-             value_ratio, 100.0 - value_ratio);
+    println!(
+        "\n  Ratio Value/Bluff: {:.0}% value / {:.0}% bluff",
+        value_ratio,
+        100.0 - value_ratio
+    );
 }
 
 /// Exemple 3: Analyse par texture de board
@@ -85,24 +93,16 @@ fn example_board_texture_analysis() {
     let preflop_range = Range::from_str("88+, ATs+, AJo+, KQs").unwrap();
 
     let scenarios = vec![
-        (
-            "A♥ K♦ Q♣ (Broadway connecté)",
-            vec!["Ah", "Kd", "Qc"],
-        ),
-        (
-            "7♥ 7♦ 2♣ (Paire de 7)",
-            vec!["7h", "7d", "2c"],
-        ),
-        (
-            "9♠ 5♠ 2♠ (Monotone pique)",
-            vec!["9s", "5s", "2s"],
-        ),
+        ("A♥ K♦ Q♣ (Broadway connecté)", vec!["Ah", "Kd", "Qc"]),
+        ("7♥ 7♦ 2♣ (Paire de 7)", vec!["7h", "7d", "2c"]),
+        ("9♠ 5♠ 2♠ (Monotone pique)", vec!["9s", "5s", "2s"]),
     ];
 
     for (description, board_str) in scenarios {
         println!("\n  Board: {}", description);
 
-        let board: Vec<Card> = board_str.iter()
+        let board: Vec<Card> = board_str
+            .iter()
             .map(|s| Card::try_from(*s).unwrap())
             .collect();
 
@@ -111,9 +111,11 @@ fn example_board_texture_analysis() {
         // Combien de combos de la range sont encore possibles
         let possible_combos = preflop_range.to_hole_cards(Some(board_cardset));
 
-        println!("    Combos possibles: {} / {}",
-                 possible_combos.len(),
-                 preflop_range.combo_count(None));
+        println!(
+            "    Combos possibles: {} / {}",
+            possible_combos.len(),
+            preflop_range.combo_count(None)
+        );
 
         // Analyser les top combos
         let breakdown = Range::from_str("88+, ATs+, AJo+, KQs")
@@ -129,7 +131,8 @@ fn example_range_manipulation() {
     println!("{}", "─".repeat(60));
 
     // Range large
-    let wide_range = Range::from_str("22+, A2s+, A5o+, K2s+, K9o+, Q8s+, QTo+, J8s+, T8s+, 98s, 87s").unwrap();
+    let wide_range =
+        Range::from_str("22+, A2s+, A5o+, K2s+, K9o+, Q8s+, QTo+, J8s+, T8s+, 98s, 87s").unwrap();
 
     println!("\n  Range initiale (Large):");
     println!("    {}", wide_range.combo_breakdown(None));
@@ -153,11 +156,17 @@ fn example_range_manipulation() {
     // Si on voit A♥ au flop
     let mut dead = CardSet::new();
     dead.insert(Card::try_from("Ah").unwrap());
-    println!("    Avec A♥ au flop: {} combos", range.combo_count(Some(dead)));
+    println!(
+        "    Avec A♥ au flop: {} combos",
+        range.combo_count(Some(dead))
+    );
 
     // Si on voit A♥ K♦ au flop
     dead.insert(Card::try_from("Kd").unwrap());
-    println!("    Avec A♥ K♦ au flop: {} combos", range.combo_count(Some(dead)));
+    println!(
+        "    Avec A♥ K♦ au flop: {} combos",
+        range.combo_count(Some(dead))
+    );
 
     // Calcul d'équité range vs range avec board
     println!("\n  Équité avec board:");
@@ -175,11 +184,17 @@ fn example_range_manipulation() {
 
     let result_preflop = calculator.calculate_range_vs_range(&hero, &villain, &board_preflop, 500);
     println!("    Preflop - Hero (AK, AQ) vs Villain (JJ, TT):");
-    println!("      Hero: {:.1}% | Villain: {:.1}%",
-             result_preflop.range_percent(), result_preflop.opponent_percent());
+    println!(
+        "      Hero: {:.1}% | Villain: {:.1}%",
+        result_preflop.range_percent(),
+        result_preflop.opponent_percent()
+    );
 
     let result_flop = calculator.calculate_range_vs_range(&hero, &villain, &board_flop, 500);
     println!("    Flop A♥K♦2♣ - Hero (AK, AQ) vs Villain (JJ, TT):");
-    println!("      Hero: {:.1}% | Villain: {:.1}%",
-             result_flop.range_percent(), result_flop.opponent_percent());
+    println!(
+        "      Hero: {:.1}% | Villain: {:.1}%",
+        result_flop.range_percent(),
+        result_flop.opponent_percent()
+    );
 }

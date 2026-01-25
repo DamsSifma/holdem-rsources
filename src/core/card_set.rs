@@ -115,4 +115,3 @@ impl std::fmt::Display for CardSet {
         write!(f, "[{}]", cards.join(" "))
     }
 }
-

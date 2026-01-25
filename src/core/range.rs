@@ -1,6 +1,6 @@
-use super::card::{Card, Value, Suit};
-use super::hand::HoleCards;
+use super::card::{Card, Suit, Value};
 use super::card_set::CardSet;
+use super::hand::HoleCards;
 use std::collections::HashSet;
 use std::fmt;
 
@@ -141,16 +141,12 @@ impl HandPattern {
         // Collect characters once to avoid multiple iterations
         let chars: Vec<char> = base.chars().collect();
 
-        let v1 = Value::from_char(chars[0])
-            .ok_or_else(|| RangeParseError::InvalidValue(chars[0]))?;
-        let v2 = Value::from_char(chars[1])
-            .ok_or_else(|| RangeParseError::InvalidValue(chars[1]))?;
+        let v1 =
+            Value::from_char(chars[0]).ok_or_else(|| RangeParseError::InvalidValue(chars[0]))?;
+        let v2 =
+            Value::from_char(chars[1]).ok_or_else(|| RangeParseError::InvalidValue(chars[1]))?;
 
-        let (high, low) = if v1 >= v2 {
-            (v1, v2)
-        } else {
-            (v2, v1)
-        };
+        let (high, low) = if v1 >= v2 { (v1, v2) } else { (v2, v1) };
 
         if high == low {
             return Ok(if is_plus {
@@ -315,9 +311,7 @@ impl std::error::Error for RangeParseError {}
 
 impl fmt::Display for Range {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let patterns: Vec<String> = self.hands.iter()
-            .map(|p| p.to_string())
-            .collect();
+        let patterns: Vec<String> = self.hands.iter().map(|p| p.to_string()).collect();
         write!(f, "{}", patterns.join(", "))
     }
 }
@@ -336,4 +330,3 @@ impl fmt::Display for HandPattern {
         }
     }
 }
-

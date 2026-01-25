@@ -53,8 +53,16 @@ fn test_royal_flush_detection() {
 
 #[test]
 fn test_category_extraction() {
-    assert_eq!(HandRanking::high_card(&[12]).category(), HandCategory::HighCard);
-    assert_eq!(HandRanking::one_pair(10, &[]).category(), HandCategory::OnePair);
-    assert_eq!(HandRanking::royal_flush().category(), HandCategory::StraightFlush);
+    assert_eq!(
+        HandRanking::high_card(&[12]).category(),
+        HandCategory::HighCard
+    );
+    assert_eq!(
+        HandRanking::one_pair(10, &[]).category(),
+        HandCategory::OnePair
+    );
+    assert_eq!(
+        HandRanking::royal_flush().category(),
+        HandCategory::StraightFlush
+    );
 }
-

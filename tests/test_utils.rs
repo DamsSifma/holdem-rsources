@@ -41,4 +41,3 @@ mod tests {
         assert_within_tolerance!(52.0, 50.0, 1.0);
     }
 }
-

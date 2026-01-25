@@ -1,5 +1,5 @@
-use holdem_rsources::core::{Card, Hand, HandEvaluator, LookupEvaluator, Value, Suit};
 use holdem_rsources::core::hand_rank::HandCategory;
+use holdem_rsources::core::{Card, Hand, HandEvaluator, LookupEvaluator, Suit, Value};
 
 fn make_card(value: Value, suit: Suit) -> Card {
     Card::new(value, suit)
@@ -199,4 +199,3 @@ fn test_hand_comparison() {
 
     assert!(two_pair_rank > pair_rank);
 }
-

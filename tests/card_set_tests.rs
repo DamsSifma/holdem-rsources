@@ -1,4 +1,4 @@
-use holdem_rsources::core::{Card, CardSet, Value, Suit};
+use holdem_rsources::core::{Card, CardSet, Suit, Value};
 
 #[test]
 fn test_card_set_basic() {
@@ -47,4 +47,3 @@ fn test_iterator() {
     let collected: Vec<Card> = set.iter().collect();
     assert_eq!(collected.len(), 2);
 }
-

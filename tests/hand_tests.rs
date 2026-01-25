@@ -1,4 +1,4 @@
-use holdem_rsources::core::{Card, HoleCards, Hand, Value, Suit};
+use holdem_rsources::core::{Card, Hand, HoleCards, Suit, Value};
 
 #[test]
 fn test_hole_cards() {
@@ -58,4 +58,3 @@ fn test_hand_with_board() {
     let full_hand = hand.with_board(&board);
     assert_eq!(full_hand.len(), 5);
 }
-

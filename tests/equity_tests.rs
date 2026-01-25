@@ -1,8 +1,8 @@
-use holdem_rsources::core::{Card, HoleCards, Value, Suit, EquityCalculator};
+use holdem_rsources::core::{Card, EquityCalculator, HoleCards, Suit, Value};
 
 #[macro_use]
 mod test_utils;
-use test_utils::{TOLERANCE, STRICT_TOLERANCE};
+use test_utils::{STRICT_TOLERANCE, TOLERANCE};
 
 #[test]
 fn test_equity_aa_vs_kk_preflop() {
@@ -141,4 +141,3 @@ fn test_exact_equity_postflop() {
     assert_within_tolerance!(result.player1_percent(), 15.91, STRICT_TOLERANCE);
     assert_within_tolerance!(result.player2_percent(), 84.09, STRICT_TOLERANCE);
 }
-

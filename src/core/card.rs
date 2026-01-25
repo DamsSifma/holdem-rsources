@@ -53,12 +53,7 @@ const VALUES: [Value; 13] = [
     Value::Ace,
 ];
 
-const SUITS: [Suit; 4] = [
-    Suit::Clubs,
-    Suit::Diamonds,
-    Suit::Hearts,
-    Suit::Spades,
-];
+const SUITS: [Suit; 4] = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 impl TryFrom<char> for Value {
     type Error = ();
 
@@ -157,7 +152,6 @@ impl Card {
     pub fn new(value: Value, suit: Suit) -> Self {
         Self { value, suit }
     }
-
 
     pub fn index(&self) -> u8 {
         let suit_idx = match self.suit {

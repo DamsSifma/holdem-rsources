@@ -1,7 +1,7 @@
-use holdem_rsources::core::{Range, HoleCards, Card, CardSet, EquityCalculator};
+use holdem_rsources::core::{Card, CardSet, EquityCalculator, HoleCards, Range};
 #[macro_use]
 mod test_utils;
-use test_utils::{TOLERANCE};
+use test_utils::TOLERANCE;
 #[test]
 fn test_parse_single_pair() {
     let range = Range::from_str("AA").unwrap();

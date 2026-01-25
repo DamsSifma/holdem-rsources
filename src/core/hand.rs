@@ -79,7 +79,9 @@ pub struct Hand {
 
 impl Hand {
     pub fn new() -> Self {
-        Self { cards: CardSet::new() }
+        Self {
+            cards: CardSet::new(),
+        }
     }
 
     pub fn from_card_set(cards: CardSet) -> Self {
@@ -150,4 +152,3 @@ impl std::fmt::Display for Hand {
         write!(f, "{}", cards.join(" "))
     }
 }
-

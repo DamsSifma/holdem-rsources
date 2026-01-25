@@ -1,7 +1,7 @@
 use super::card::Card;
 use super::card_set::CardSet;
-use super::hand::{Hand, HoleCards};
 use super::evaluator::{HandEvaluator, LookupEvaluator};
+use super::hand::{Hand, HoleCards};
 use super::range::Range;
 use rand::seq::SliceRandom;
 
@@ -39,11 +39,21 @@ impl EquityCalculator {
     }
 
     fn all_cards() -> Vec<Card> {
-        use crate::core::{Value, Suit};
+        use crate::core::{Suit, Value};
         let values = [
-            Value::Two, Value::Three, Value::Four, Value::Five,
-            Value::Six, Value::Seven, Value::Eight, Value::Nine,
-            Value::Ten, Value::Jack, Value::Queen, Value::King, Value::Ace,
+            Value::Two,
+            Value::Three,
+            Value::Four,
+            Value::Five,
+            Value::Six,
+            Value::Seven,
+            Value::Eight,
+            Value::Nine,
+            Value::Ten,
+            Value::Jack,
+            Value::Queen,
+            Value::King,
+            Value::Ace,
         ];
         let suits = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 
@@ -348,12 +358,16 @@ impl EquityCalculator {
         for hole1 in &combos1 {
             for hole2 in &combos2 {
                 // Vérifier qu'il n'y a pas de cartes en commun
-                if hole1.high() == hole2.high() || hole1.high() == hole2.low()
-                    || hole1.low() == hole2.high() || hole1.low() == hole2.low() {
+                if hole1.high() == hole2.high()
+                    || hole1.high() == hole2.low()
+                    || hole1.low() == hole2.high()
+                    || hole1.low() == hole2.low()
+                {
                     continue;
                 }
 
-                let result = self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup);
+                let result =
+                    self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup);
                 total_range1_wins += result.player1_equity;
                 total_range2_wins += result.player2_equity;
                 total_ties += result.tie_equity;
@@ -410,6 +424,3 @@ impl Default for EquityCalculator {
         Self::new()
     }
 }
-
-
-

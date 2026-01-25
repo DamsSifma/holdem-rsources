@@ -151,4 +151,3 @@ impl HandRanking {
         Self::straight_flush(12)
     }
 }
-

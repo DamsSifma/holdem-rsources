@@ -25,9 +25,7 @@ impl LookupEvaluator {
     pub fn new() -> Self {
         let flush_table = Self::generate_flush_table();
 
-        Self {
-            flush_table,
-        }
+        Self { flush_table }
     }
 
     /// Génère la table des flush (5 cartes de même couleur)
@@ -60,8 +58,6 @@ impl LookupEvaluator {
 
         table
     }
-
-
 
     fn is_straight_ranks(ranks: &[u8; 5]) -> Option<u8> {
         let high = ranks[0];
@@ -126,7 +122,7 @@ impl LookupEvaluator {
         while remaining != 0 {
             let idx = remaining.trailing_zeros();
             let suit = (idx % 4) as usize;
-            let rank = idx / 4;  // 0-12
+            let rank = idx / 4; // 0-12
             suit_ranks[suit] |= 1 << rank;
             remaining &= remaining - 1;
         }
@@ -172,7 +168,8 @@ impl LookupEvaluator {
 
         // Carré
         if !quads.is_empty() {
-            let kicker = trips.first()
+            let kicker = trips
+                .first()
                 .or(pairs.first())
                 .or(singles.first())
                 .copied()
@@ -183,17 +180,14 @@ impl LookupEvaluator {
         // Full house
         if !trips.is_empty() && (!pairs.is_empty() || trips.len() >= 2) {
             let trip_rank = trips[0];
-            let pair_rank = if trips.len() >= 2 {
-                trips[1]
-            } else {
-                pairs[0]
-            };
+            let pair_rank = if trips.len() >= 2 { trips[1] } else { pairs[0] };
             return HandRanking::full_house(trip_rank, pair_rank);
         }
 
         // Brelan
         if !trips.is_empty() {
-            let kickers: Vec<u8> = pairs.iter()
+            let kickers: Vec<u8> = pairs
+                .iter()
                 .chain(singles.iter())
                 .take(2)
                 .copied()
@@ -203,10 +197,7 @@ impl LookupEvaluator {
 
         // Double paire
         if pairs.len() >= 2 {
-            let kicker = pairs.get(2)
-                .or(singles.first())
-                .copied()
-                .unwrap_or(0);
+            let kicker = pairs.get(2).or(singles.first()).copied().unwrap_or(0);
             return HandRanking::two_pair(pairs[0], pairs[1], kicker);
         }
 
@@ -341,5 +332,3 @@ pub fn evaluate_7_cards_fast(evaluator: &impl HandEvaluator, cards_bits: u64) ->
     // L'évaluateur choisira les 5 meilleures cartes
     evaluator.evaluate_u64(cards_bits)
 }
-
-

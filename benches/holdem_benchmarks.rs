@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
-use std::hint::black_box;
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use holdem_rsources::core::*;
+use std::hint::black_box;
 
 fn bench_hand_evaluation(c: &mut Criterion) {
     let evaluator = LookupEvaluator::new();
@@ -9,7 +9,8 @@ fn bench_hand_evaluation(c: &mut Criterion) {
 
     // Helper function to create hands from string
     fn parse_hand(s: &str) -> Hand {
-        let cards: Vec<Card> = s.split_whitespace()
+        let cards: Vec<Card> = s
+            .split_whitespace()
             .filter_map(|c| Card::try_from(c).ok())
             .collect();
         Hand::from_cards(&cards)
@@ -99,14 +100,22 @@ fn bench_range_parsing(c: &mut Criterion) {
 
     // Complex range
     group.bench_function("complex_range", |b| {
-        b.iter(|| Range::from_str(black_box("AA, KK, QQ+, AKs, AKo, AQs+, KQs+, JTs+, T9s+, 98s+")).unwrap())
+        b.iter(|| {
+            Range::from_str(black_box(
+                "AA, KK, QQ+, AKs, AKo, AQs+, KQs+, JTs+, T9s+, 98s+",
+            ))
+            .unwrap()
+        })
     });
 
     // Very complex typical 3-bet range
     group.bench_function("typical_3bet_range", |b| {
-        b.iter(|| Range::from_str(black_box(
-            "AA, KK, QQ, JJ, TT, 99, AKs, AKo, AQs, AQo, AJs, ATs, KQs, KJs, QJs, JTs"
-        )).unwrap())
+        b.iter(|| {
+            Range::from_str(black_box(
+                "AA, KK, QQ, JJ, TT, 99, AKs, AKo, AQs, AQo, AJs, ATs, KQs, KJs, QJs, JTs",
+            ))
+            .unwrap()
+        })
     });
 
     group.finish();
@@ -118,8 +127,14 @@ fn bench_range_expansion(c: &mut Criterion) {
     let ranges = vec![
         ("small", "AA, KK"),
         ("medium", "AA, KK, QQ+, AKs, AKo"),
-        ("large", "AA, KK, QQ+, AKs, AKo, AQs+, KQs+, JTs+, T9s+, 98s+, 87s+, 76s+"),
-        ("very_large", "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, KQs, KQo, KJs, KJo, KTs, QJs, QJo, QTs, JTs"),
+        (
+            "large",
+            "AA, KK, QQ+, AKs, AKo, AQs+, KQs+, JTs+, T9s+, 98s+, 87s+, 76s+",
+        ),
+        (
+            "very_large",
+            "AA, KK, QQ, JJ, TT, 99, 88, 77, 66, 55, 44, 33, 22, AKs, AKo, AQs, AQo, AJs, AJo, ATs, ATo, KQs, KQo, KJs, KJo, KTs, QJs, QJo, QTs, JTs",
+        ),
     ];
 
     for (name, range_str) in ranges {
@@ -146,22 +161,26 @@ fn bench_equity_calculation(c: &mut Criterion) {
 
     // AA vs KK (classic cooler)
     group.bench_function("preflop_AA_vs_KK", |b| {
-        b.iter(|| calc.calculate_monte_carlo(
-            black_box(&aa),
-            black_box(&kk),
-            black_box(&[]),
-            black_box(10000)
-        ))
+        b.iter(|| {
+            calc.calculate_monte_carlo(
+                black_box(&aa),
+                black_box(&kk),
+                black_box(&[]),
+                black_box(10000),
+            )
+        })
     });
 
     // AK vs QQ (coin flip)
     group.bench_function("preflop_AK_vs_QQ", |b| {
-        b.iter(|| calc.calculate_monte_carlo(
-            black_box(&ak),
-            black_box(&qq),
-            black_box(&[]),
-            black_box(10000)
-        ))
+        b.iter(|| {
+            calc.calculate_monte_carlo(
+                black_box(&ak),
+                black_box(&qq),
+                black_box(&[]),
+                black_box(10000),
+            )
+        })
     });
 
     // With board (flop)
@@ -172,12 +191,14 @@ fn bench_equity_calculation(c: &mut Criterion) {
     ];
 
     group.bench_function("flop_equity", |b| {
-        b.iter(|| calc.calculate_monte_carlo(
-            black_box(&aa),
-            black_box(&kk),
-            black_box(&board_flop),
-            black_box(10000)
-        ))
+        b.iter(|| {
+            calc.calculate_monte_carlo(
+                black_box(&aa),
+                black_box(&kk),
+                black_box(&board_flop),
+                black_box(10000),
+            )
+        })
     });
 
     // With board (turn)
@@ -189,12 +210,14 @@ fn bench_equity_calculation(c: &mut Criterion) {
     ];
 
     group.bench_function("turn_equity", |b| {
-        b.iter(|| calc.calculate_monte_carlo(
-            black_box(&aa),
-            black_box(&kk),
-            black_box(&board_turn),
-            black_box(10000)
-        ))
+        b.iter(|| {
+            calc.calculate_monte_carlo(
+                black_box(&aa),
+                black_box(&kk),
+                black_box(&board_turn),
+                black_box(10000),
+            )
+        })
     });
 
     // Exact calculation on river (only 1 possibility)
@@ -207,11 +230,7 @@ fn bench_equity_calculation(c: &mut Criterion) {
     ];
 
     group.bench_function("river_exact", |b| {
-        b.iter(|| calc.calculate_exact(
-            black_box(&aa),
-            black_box(&kk),
-            black_box(&board_river)
-        ))
+        b.iter(|| calc.calculate_exact(black_box(&aa), black_box(&kk), black_box(&board_river)))
     });
 
     group.finish();
@@ -229,12 +248,14 @@ fn bench_equity_simulation_sizes(c: &mut Criterion) {
             BenchmarkId::from_parameter(simulations),
             simulations,
             |b, &sims| {
-                b.iter(|| calc.calculate_monte_carlo(
-                    black_box(&aa),
-                    black_box(&kk),
-                    black_box(&[]),
-                    black_box(sims)
-                ))
+                b.iter(|| {
+                    calc.calculate_monte_carlo(
+                        black_box(&aa),
+                        black_box(&kk),
+                        black_box(&[]),
+                        black_box(sims),
+                    )
+                })
             },
         );
     }
@@ -252,12 +273,14 @@ fn bench_range_vs_range_equity(c: &mut Criterion) {
     let r2 = Range::from_str("QQ, JJ").unwrap();
 
     group.bench_function("small_ranges_1000", |b| {
-        b.iter(|| calc.calculate_range_vs_range(
-            black_box(&r1),
-            black_box(&r2),
-            black_box(&[]),
-            black_box(1000)
-        ))
+        b.iter(|| {
+            calc.calculate_range_vs_range(
+                black_box(&r1),
+                black_box(&r2),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
     });
 
     // Medium ranges
@@ -265,12 +288,14 @@ fn bench_range_vs_range_equity(c: &mut Criterion) {
     let r4 = Range::from_str("JJ, TT, AQs, KQs").unwrap();
 
     group.bench_function("medium_ranges_1000", |b| {
-        b.iter(|| calc.calculate_range_vs_range(
-            black_box(&r3),
-            black_box(&r4),
-            black_box(&[]),
-            black_box(1000)
-        ))
+        b.iter(|| {
+            calc.calculate_range_vs_range(
+                black_box(&r3),
+                black_box(&r4),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
     });
 
     group.finish();

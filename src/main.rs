@@ -1,6 +1,5 @@
 use holdem_rsources::core::{
-    Card, CardSet, Hand, HoleCards, LookupEvaluator, HandEvaluator,
-    EquityCalculator, Range,
+    Card, CardSet, EquityCalculator, Hand, HandEvaluator, HoleCards, LookupEvaluator, Range,
 };
 use std::time::Instant;
 
@@ -44,7 +43,8 @@ fn demo_hand_evaluation() {
     ];
 
     for (name, cards_str) in hands {
-        let cards: Vec<Card> = cards_str.iter()
+        let cards: Vec<Card> = cards_str
+            .iter()
             .map(|s| Card::try_from(*s).unwrap())
             .collect();
 
@@ -52,8 +52,12 @@ fn demo_hand_evaluation() {
         let hand = Hand::from_card_set(card_set);
         let ranking = evaluator.evaluate(&hand);
 
-        println!("  {:<18} → {:>16} (score: {:4})",
-                 name, ranking.to_string(), ranking.score());
+        println!(
+            "  {:<18} → {:>16} (score: {:4})",
+            name,
+            ranking.to_string(),
+            ranking.score()
+        );
     }
 }
 
@@ -92,8 +96,18 @@ fn demo_hand_comparisons() {
         let rank1 = evaluator.evaluate(&h1);
         let rank2 = evaluator.evaluate(&h2);
 
-        println!("    {} → {:<16} ({})", hand1_str, rank1.to_string(), rank1.score());
-        println!("    {} → {:<16} ({})", hand2_str, rank2.to_string(), rank2.score());
+        println!(
+            "    {} → {:<16} ({})",
+            hand1_str,
+            rank1.to_string(),
+            rank1.score()
+        );
+        println!(
+            "    {} → {:<16} ({})",
+            hand2_str,
+            rank2.to_string(),
+            rank2.score()
+        );
 
         match rank1.cmp(&rank2) {
             std::cmp::Ordering::Greater => println!("    ✅ {} wins!\n", hand1_str),
@@ -126,21 +140,26 @@ fn demo_equity_preflop() {
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
 
         let start = Instant::now();
-        let result = calculator.calculate_monte_carlo(
-            &hand1,
-            &hand2,
-            &[],
-            10000,
-        );
+        let result = calculator.calculate_monte_carlo(&hand1, &hand2, &[], 10000);
         let duration = start.elapsed();
 
         println!();
-        println!("    {} → {:.1}% equity", hand1_str, result.player1_percent());
-        println!("    {} → {:.1}% equity", hand2_str, result.player2_percent());
-        println!("    Tie: {:.1}% | Simulations: {} ({:.0} sim/ms)",
-                 result.tie_percent(),
-                 result.simulations,
-                 result.simulations as f64 / duration.as_millis().max(1) as f64);
+        println!(
+            "    {} → {:.1}% equity",
+            hand1_str,
+            result.player1_percent()
+        );
+        println!(
+            "    {} → {:.1}% equity",
+            hand2_str,
+            result.player2_percent()
+        );
+        println!(
+            "    Tie: {:.1}% | Simulations: {} ({:.0} sim/ms)",
+            result.tie_percent(),
+            result.simulations,
+            result.simulations as f64 / duration.as_millis().max(1) as f64
+        );
         println!();
     }
 }
@@ -163,12 +182,7 @@ fn demo_equity_postflop() {
             vec!["Ac", "9d", "2c"],
             "Underpair vs top pair",
         ),
-        (
-            "JcTc",
-            "AhQs",
-            vec!["Kh", "Qd", "9s"],
-            "OESD vs top pair",
-        ),
+        ("JcTc", "AhQs", vec!["Kh", "Qd", "9s"], "OESD vs top pair"),
     ];
 
     let calculator = EquityCalculator::new();
@@ -177,7 +191,8 @@ fn demo_equity_postflop() {
         let hand1 = HoleCards::from_str(hand1_str).unwrap();
         let hand2 = HoleCards::from_str(hand2_str).unwrap();
 
-        let board: Vec<Card> = board_str.iter()
+        let board: Vec<Card> = board_str
+            .iter()
             .map(|s| Card::try_from(*s).unwrap())
             .collect();
 
@@ -187,16 +202,19 @@ fn demo_equity_postflop() {
         println!("  Board: {}", board_display);
 
         let start = Instant::now();
-        let result = calculator.calculate_monte_carlo(
-            &hand1,
-            &hand2,
-            &board,
-            5000,
-        );
+        let result = calculator.calculate_monte_carlo(&hand1, &hand2, &board, 5000);
         let duration = start.elapsed();
 
-        println!("    {} → {:.1}% equity", hand1_str, result.player1_percent());
-        println!("    {} → {:.1}% equity", hand2_str, result.player2_percent());
+        println!(
+            "    {} → {:.1}% equity",
+            hand1_str,
+            result.player1_percent()
+        );
+        println!(
+            "    {} → {:.1}% equity",
+            hand2_str,
+            result.player2_percent()
+        );
         println!("    ({} simulations in {:?})", result.simulations, duration);
         println!();
     }
@@ -241,8 +259,10 @@ fn demo_ranges() {
 
     println!("    Range equity: {:.1}%", result.range_percent());
     println!("    Hand equity:  {:.1}%", result.opponent_percent());
-    println!("    ({} combos, {} sims in {:?})",
-             result.combos_evaluated, result.total_simulations, duration);
+    println!(
+        "    ({} combos, {} sims in {:?})",
+        result.combos_evaluated, result.total_simulations, duration
+    );
 
     // Équité range vs range
     println!("\n  🎯 Range vs Range Equity:");
@@ -258,8 +278,10 @@ fn demo_ranges() {
 
     println!("    Hero equity:    {:.1}%", result.range_percent());
     println!("    Villain equity: {:.1}%", result.opponent_percent());
-    println!("    ({} matchups, {} sims in {:?})",
-             result.combos_evaluated, result.total_simulations, duration);
+    println!(
+        "    ({} matchups, {} sims in {:?})",
+        result.combos_evaluated, result.total_simulations, duration
+    );
 
     // Range avec dead cards
     println!("\n  🎴 Range avec dead cards:");
@@ -269,10 +291,16 @@ fn demo_ranges() {
 
     let mut dead = CardSet::new();
     dead.insert(Card::try_from("Ah").unwrap());
-    println!("    Avec Ah mort:    {} combos", range.combo_count(Some(dead)));
+    println!(
+        "    Avec Ah mort:    {} combos",
+        range.combo_count(Some(dead))
+    );
 
     dead.insert(Card::try_from("As").unwrap());
-    println!("    Avec Ah,As morts: {} combo", range.combo_count(Some(dead)));
+    println!(
+        "    Avec Ah,As morts: {} combo",
+        range.combo_count(Some(dead))
+    );
 
     // Conversion en hole cards
     println!("\n  🃏 Génération de combos:");
@@ -338,6 +366,9 @@ fn demo_cardset_operations() {
     let ace_hearts = Card::try_from("Ah").unwrap();
     let deuce_clubs = Card::try_from("2c").unwrap();
     println!("    {} in hand1? {}", ace_hearts, set1.contains(ace_hearts));
-    println!("    {} in hand1? {}", deuce_clubs, set1.contains(deuce_clubs));
+    println!(
+        "    {} in hand1? {}",
+        deuce_clubs,
+        set1.contains(deuce_clubs)
+    );
 }
-
