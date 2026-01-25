@@ -1,0 +1,13 @@
+set -e
+
+echo "🔍 Formatting Rust code..."
+
+# Formater tous les fichiers Rust
+cargo fmt --all
+
+# Ajouter les fichiers modifiés au commit
+git diff --name-only --cached | grep '\.rs$' | xargs git add 2>/dev/null || true
+
+echo "✅ Code formatted successfully"
+
+exit 0

@@ -145,7 +145,7 @@ impl Hand {
             .split_whitespace()
             .filter_map(|card_str| Card::try_from(card_str).ok())
             .collect();
-        
+
         if cards.is_empty() {
             None
         } else {
