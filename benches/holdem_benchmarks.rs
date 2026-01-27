@@ -302,6 +302,39 @@ fn bench_range_vs_range_equity(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_range_vs_range_parallel_comparison(c: &mut Criterion) {
+    let calc = EquityCalculator::new();
+
+    let mut group = c.benchmark_group("range_vs_range_parallel_vs_sequential");
+
+    let r1 = Range::from_str("AA, KK, QQ").unwrap();
+    let r2 = Range::from_str("JJ, TT, 99").unwrap();
+
+    group.bench_function("parallel", |b| {
+        b.iter(|| {
+            calc.calculate_range_vs_range(
+                black_box(&r1),
+                black_box(&r2),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
+    });
+
+    group.bench_function("sequential", |b| {
+        b.iter(|| {
+            calc.calculate_range_vs_range_sequential(
+                black_box(&r1),
+                black_box(&r2),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
+    });
+
+    group.finish();
+}
+
 fn bench_card_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("card_operations");
 
@@ -348,6 +381,7 @@ criterion_group!(
     bench_equity_calculation,
     bench_equity_simulation_sizes,
     bench_range_vs_range_equity,
+    bench_range_vs_range_parallel_comparison,
     bench_card_operations,
 );
 

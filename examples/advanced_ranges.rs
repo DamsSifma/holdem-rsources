@@ -1,6 +1,3 @@
-/// Exemples avancés d'utilisation des ranges de poker
-///
-/// Ce fichier montre différents cas d'usage pratiques des ranges
 use holdem_rsources::core::{Card, CardSet, EquityCalculator, Range};
 use std::str::FromStr;
 
