@@ -2,8 +2,8 @@ use super::results::MultiPlayerEquityResult;
 use crate::core::card::Card;
 use crate::core::card_set::CardSet;
 use crate::core::evaluator::{HandEvaluator, LookupEvaluator};
-use crate::core::hand::{Hand, HoleCards};
-use crate::core::{Suit, Value};
+use crate::core::hand::HoleCards;
+use crate::core::helpers;
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
 
@@ -25,6 +25,22 @@ pub trait MultiwayEquityCalculator {
     ) -> MultiPlayerEquityResult;
 
     /// Calculate equity for multi-way pots (sequential version for benchmarking)
+    ///
+    /// This is a non-parallel version of `calculate_multiway_monte_carlo` for performance
+    /// comparison and benchmarking purposes. It uses the same algorithm but runs
+    /// simulations sequentially in a single thread.
+    ///
+    /// # Arguments
+    /// * `hole_cards` - Slice of hole cards for each player (2-9 players)
+    /// * `board` - Cards already on the board (0-5 cards)
+    /// * `iterations` - Number of Monte Carlo simulations to run
+    ///
+    /// # Panics
+    /// Panics if number of players is < 2 or > 9
+    ///
+    /// # Usage
+    /// This method should primarily be used for benchmarking to measure the speedup
+    /// gained from parallel execution. For production use, prefer `calculate_multiway_monte_carlo`.
     fn calculate_multiway_monte_carlo_sequential(
         &self,
         hole_cards: &[HoleCards],
@@ -47,57 +63,17 @@ pub trait MultiwayEquityCalculator {
     ) -> MultiPlayerEquityResult;
 }
 
-pub(super) struct MultiwayHelper;
-
-impl MultiwayHelper {
-    pub fn all_cards() -> Vec<Card> {
-        let values = [
-            Value::Two,
-            Value::Three,
-            Value::Four,
-            Value::Five,
-            Value::Six,
-            Value::Seven,
-            Value::Eight,
-            Value::Nine,
-            Value::Ten,
-            Value::Jack,
-            Value::Queen,
-            Value::King,
-            Value::Ace,
-        ];
-        let suits = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
-
-        let mut cards = Vec::with_capacity(52);
-        for &value in &values {
-            for &suit in &suits {
-                cards.push(Card::new(value, suit));
-            }
-        }
-        cards
+/// Internal helper for building dead cards set
+fn build_dead_cards(hole_cards: &[HoleCards], board: &[Card]) -> CardSet {
+    let mut dead_cards = CardSet::new();
+    for hole in hole_cards {
+        dead_cards.insert(hole.high());
+        dead_cards.insert(hole.low());
     }
-
-    pub fn build_hand(hole: &HoleCards, board: &[Card]) -> Hand {
-        let mut hand = Hand::new();
-        hand.add(hole.high());
-        hand.add(hole.low());
-        for card in board {
-            hand.add(*card);
-        }
-        hand
+    for card in board {
+        dead_cards.insert(*card);
     }
-
-    pub fn build_dead_cards(hole_cards: &[HoleCards], board: &[Card]) -> CardSet {
-        let mut dead_cards = CardSet::new();
-        for hole in hole_cards {
-            dead_cards.insert(hole.high());
-            dead_cards.insert(hole.low());
-        }
-        for card in board {
-            dead_cards.insert(*card);
-        }
-        dead_cards
-    }
+    dead_cards
 }
 
 pub struct MultiwayCalculator<'a> {
@@ -121,14 +97,15 @@ impl<'a> MultiwayCalculator<'a> {
             "Number of players must be between 2 and 9"
         );
 
-        let dead_cards = MultiwayHelper::build_dead_cards(hole_cards, board);
-        let available_cards: Vec<Card> = MultiwayHelper::all_cards()
+        let dead_cards = build_dead_cards(hole_cards, board);
+        let available_cards: Vec<Card> = helpers::all_cards()
             .into_iter()
             .filter(|c| !dead_cards.contains(*c))
             .collect();
 
         let cards_needed = 5 - board.len();
 
+        // Parallel Monte Carlo simulation
         let results: Vec<_> = (0..iterations)
             .into_par_iter()
             .map(|_| {
@@ -143,14 +120,13 @@ impl<'a> MultiwayCalculator<'a> {
                 let rankings: Vec<_> = hole_cards
                     .iter()
                     .map(|hole| {
-                        let hand = MultiwayHelper::build_hand(hole, &full_board);
+                        let hand = helpers::build_hand(hole, &full_board);
                         self.evaluator.evaluate(&hand)
                     })
                     .collect();
 
                 let best_rank = rankings.iter().max().copied().unwrap();
 
-                // Find winners
                 let winners: Vec<usize> = rankings
                     .iter()
                     .enumerate()
@@ -180,8 +156,8 @@ impl<'a> MultiwayCalculator<'a> {
             "Number of players must be between 2 and 9"
         );
 
-        let dead_cards = MultiwayHelper::build_dead_cards(hole_cards, board);
-        let mut available_cards: Vec<Card> = MultiwayHelper::all_cards()
+        let dead_cards = build_dead_cards(hole_cards, board);
+        let mut available_cards: Vec<Card> = helpers::all_cards()
             .into_iter()
             .filter(|c| !dead_cards.contains(*c))
             .collect();
@@ -200,7 +176,7 @@ impl<'a> MultiwayCalculator<'a> {
             let rankings: Vec<_> = hole_cards
                 .iter()
                 .map(|hole| {
-                    let hand = MultiwayHelper::build_hand(hole, &full_board);
+                    let hand = helpers::build_hand(hole, &full_board);
                     self.evaluator.evaluate(&hand)
                 })
                 .collect();
@@ -242,7 +218,7 @@ impl<'a> MultiwayCalculator<'a> {
         let rankings: Vec<_> = hole_cards
             .iter()
             .map(|hole| {
-                let hand = MultiwayHelper::build_hand(hole, board);
+                let hand = helpers::build_hand(hole, board);
                 self.evaluator.evaluate(&hand)
             })
             .collect();
