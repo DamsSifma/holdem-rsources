@@ -38,6 +38,103 @@ fn test_multiway_exact_three_players() {
 }
 
 #[test]
+fn test_multiway_exact_partial_tie() {
+    let calc = EquityCalculator::new();
+
+    // Board: Ah Kh Qh Jh 2c (four hearts on board)
+    let board = vec![
+        Card::try_from("Ah").unwrap(),
+        Card::try_from("Kh").unwrap(),
+        Card::try_from("Qh").unwrap(),
+        Card::try_from("Jh").unwrap(),
+        Card::try_from("2c").unwrap(),
+    ];
+
+    // Player 0: Th9h - Royal flush
+    // Player 1: 8h7h - Straight flush (8-high)
+    // Player 2: 6h5h - Straight flush (8-high, same as player 1)
+    let hole_cards = vec![
+        HoleCards::from_str("Th9h").unwrap(), // Royal flush - wins
+        HoleCards::from_str("8h7h").unwrap(), // Straight flush 8-high - loses
+        HoleCards::from_str("6h5h").unwrap(), // Straight flush 8-high - loses
+    ];
+
+    let result = calc.calculate_multiway_exact(&hole_cards, &board);
+
+    assert_eq!(result.num_players(), 3);
+    assert_eq!(result.ties, 0); // Only one winner
+
+    // Player 0 should win with 100%
+    assert!(
+        (result.player_percent(0) - 100.0).abs() < 0.01,
+        "Player 0 equity: {}%",
+        result.player_percent(0)
+    );
+    assert!(
+        (result.player_percent(1) - 0.0).abs() < 0.01,
+        "Player 1 equity: {}%",
+        result.player_percent(1)
+    );
+    assert!(
+        (result.player_percent(2) - 0.0).abs() < 0.01,
+        "Player 2 equity: {}%",
+        result.player_percent(2)
+    );
+}
+
+#[test]
+fn test_multiway_exact_partial_tie_two_winners() {
+    let calc = EquityCalculator::new();
+
+    // Board: 9s 9h 9d 2c 3h (trip nines on board)
+    let board = vec![
+        Card::try_from("9s").unwrap(),
+        Card::try_from("9h").unwrap(),
+        Card::try_from("9d").unwrap(),
+        Card::try_from("2c").unwrap(),
+        Card::try_from("3h").unwrap(),
+    ];
+
+    // Player 0: AsKs - Trip 9s with AK kickers
+    // Player 1: AhKh - Trip 9s with AK kickers (TIES with player 0)
+    // Player 2: 7d8d - Trip 9s with 87 kickers (LOSES)
+    let hole_cards = vec![
+        HoleCards::from_str("AsKs").unwrap(),
+        HoleCards::from_str("AhKh").unwrap(),
+        HoleCards::from_str("7d8d").unwrap(),
+    ];
+
+    let result = calc.calculate_multiway_exact(&hole_cards, &board);
+
+    println!("Player 0 equity: {}%", result.player_percent(0));
+    println!("Player 1 equity: {}%", result.player_percent(1));
+    println!("Player 2 equity: {}%", result.player_percent(2));
+    println!("Ties: {}", result.ties);
+    println!("Wins: {:?}", result.wins);
+
+    assert_eq!(result.num_players(), 3);
+    assert_eq!(result.ties, 1); // Players 0 and 1 tie
+
+    // Players 0 and 1 should each have 50% equity (split the pot)
+    // Player 2 should have 0% equity
+    assert!(
+        (result.player_percent(0) - 50.0).abs() < 0.1,
+        "Player 0 equity: {}%",
+        result.player_percent(0)
+    );
+    assert!(
+        (result.player_percent(1) - 50.0).abs() < 0.1,
+        "Player 1 equity: {}%",
+        result.player_percent(1)
+    );
+    assert!(
+        (result.player_percent(2) - 0.0).abs() < 0.1,
+        "Player 2 equity: {}%",
+        result.player_percent(2)
+    );
+}
+
+#[test]
 fn test_multiway_exact_one_winner() {
     let calc = EquityCalculator::new();
 
@@ -67,6 +164,64 @@ fn test_multiway_exact_one_winner() {
     assert!((result.player_percent(0) - 100.0).abs() < 0.01);
     assert!((result.player_percent(1) - 0.0).abs() < 0.01);
     assert!((result.player_percent(2) - 0.0).abs() < 0.01);
+}
+
+#[test]
+fn test_multiway_monte_carlo_partial_tie() {
+    let calc = EquityCalculator::new();
+
+    // Board with trip nines
+    let board = vec![
+        Card::try_from("9s").unwrap(),
+        Card::try_from("9h").unwrap(),
+        Card::try_from("9d").unwrap(),
+        Card::try_from("2c").unwrap(),
+        Card::try_from("3h").unwrap(),
+    ];
+
+    // Same as exact test
+    let hole_cards = vec![
+        HoleCards::from_str("AsKs").unwrap(), // Trip 9s with AK
+        HoleCards::from_str("AhKh").unwrap(), // Trip 9s with AK (ties with player 0)
+        HoleCards::from_str("7d8d").unwrap(), // Trip 9s with 87 (loses)
+    ];
+
+    let result = calc.calculate_multiway_monte_carlo(&hole_cards, &board, 10000);
+
+    println!(
+        "Monte Carlo - Player 0 equity: {}%",
+        result.player_percent(0)
+    );
+    println!(
+        "Monte Carlo - Player 1 equity: {}%",
+        result.player_percent(1)
+    );
+    println!(
+        "Monte Carlo - Player 2 equity: {}%",
+        result.player_percent(2)
+    );
+
+    // Players 0 and 1 should each have ~50% equity
+    // Player 2 should have ~0% equity
+    assert!(
+        (result.player_percent(0) - 50.0).abs() < 2.0,
+        "Player 0 equity: {}%",
+        result.player_percent(0)
+    );
+    assert!(
+        (result.player_percent(1) - 50.0).abs() < 2.0,
+        "Player 1 equity: {}%",
+        result.player_percent(1)
+    );
+    assert!(
+        result.player_percent(2) < 2.0,
+        "Player 2 equity: {}%",
+        result.player_percent(2)
+    );
+
+    // Total should still be ~100%
+    let total: f64 = result.player_equities.iter().sum();
+    assert!((total - 1.0).abs() < 0.01);
 }
 
 #[test]

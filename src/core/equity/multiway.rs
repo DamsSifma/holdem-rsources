@@ -166,6 +166,7 @@ impl<'a> MultiwayCalculator<'a> {
         let mut rng = rand::rng();
 
         let mut wins = vec![0usize; num_players];
+        let mut equity_fractions = vec![0.0f64; num_players];
         let mut ties = 0usize;
 
         for _ in 0..iterations {
@@ -195,12 +196,28 @@ impl<'a> MultiwayCalculator<'a> {
 
             if winners.len() == 1 {
                 wins[winners[0]] += 1;
+                equity_fractions[winners[0]] += 1.0;
             } else {
+                // Multiple winners = tie - split equity equally among winners
                 ties += 1;
+                let fraction_per_winner = 1.0 / winners.len() as f64;
+                for &winner_idx in &winners {
+                    equity_fractions[winner_idx] += fraction_per_winner;
+                }
             }
         }
 
-        Self::build_result(wins, ties, num_players, iterations)
+        let player_equities: Vec<f64> = equity_fractions
+            .iter()
+            .map(|&equity| equity / iterations as f64)
+            .collect();
+
+        MultiPlayerEquityResult {
+            player_equities,
+            wins,
+            ties,
+            simulations: iterations,
+        }
     }
 
     pub fn calculate_exact(
@@ -270,34 +287,26 @@ impl<'a> MultiwayCalculator<'a> {
         iterations: usize,
     ) -> MultiPlayerEquityResult {
         let mut wins = vec![0usize; num_players];
+        let mut equity_fractions = vec![0.0f64; num_players];
         let mut ties = 0usize;
 
         for winners in results {
             if winners.len() == 1 {
                 wins[winners[0]] += 1;
+                equity_fractions[winners[0]] += 1.0;
             } else {
+                // Multiple winners = tie - split equity equally among winners
                 ties += 1;
+                let fraction_per_winner = 1.0 / winners.len() as f64;
+                for &winner_idx in &winners {
+                    equity_fractions[winner_idx] += fraction_per_winner;
+                }
             }
         }
 
-        Self::build_result(wins, ties, num_players, iterations)
-    }
-
-    fn build_result(
-        wins: Vec<usize>,
-        ties: usize,
-        num_players: usize,
-        iterations: usize,
-    ) -> MultiPlayerEquityResult {
-        let tie_equity_per_player = if ties > 0 {
-            ties as f64 / iterations as f64 / num_players as f64
-        } else {
-            0.0
-        };
-
-        let player_equities: Vec<f64> = wins
+        let player_equities: Vec<f64> = equity_fractions
             .iter()
-            .map(|&w| (w as f64 / iterations as f64) + tie_equity_per_player)
+            .map(|&equity| equity / iterations as f64)
             .collect();
 
         MultiPlayerEquityResult {
