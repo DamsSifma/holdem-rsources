@@ -1,7 +1,10 @@
 pub mod card;
 pub use card::{Card, Suit, Value};
 pub use card_set::CardSet;
-pub use equity::{EquityCalculator, EquityResult, RangeEquityResult};
+pub use equity::{
+    EquityCalculator, EquityResult, MultiPlayerEquityResult, MultiwayEquityCalculator,
+    RangeEquityResult,
+};
 pub use evaluator::{HandEvaluator, LookupEvaluator};
 pub use hand::{Hand, HoleCards};
 pub use hand_rank::HandRanking;
