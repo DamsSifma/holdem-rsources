@@ -1,32 +1,17 @@
+mod multiway;
+mod results;
+
+pub use multiway::{MultiwayCalculator, MultiwayEquityCalculator};
+pub use results::{EquityResult, MultiPlayerEquityResult, RangeEquityResult};
+
 use super::card::Card;
 use super::card_set::CardSet;
 use super::evaluator::{HandEvaluator, LookupEvaluator};
 use super::hand::{Hand, HoleCards};
 use super::range::Range;
+use crate::core::{Suit, Value};
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
-
-#[derive(Debug, Clone, Copy)]
-pub struct EquityResult {
-    pub player1_equity: f64,
-    pub player2_equity: f64,
-    pub tie_equity: f64,
-    pub simulations: usize,
-}
-
-impl EquityResult {
-    pub fn player1_percent(&self) -> f64 {
-        self.player1_equity * 100.0
-    }
-
-    pub fn player2_percent(&self) -> f64 {
-        self.player2_equity * 100.0
-    }
-
-    pub fn tie_percent(&self) -> f64 {
-        self.tie_equity * 100.0
-    }
-}
 
 pub struct EquityCalculator {
     evaluator: LookupEvaluator,
@@ -50,7 +35,6 @@ impl EquityCalculator {
     }
 
     fn all_cards() -> Vec<Card> {
-        use crate::core::{Suit, Value};
         let values = [
             Value::Two,
             Value::Three,
@@ -77,6 +61,18 @@ impl EquityCalculator {
         cards
     }
 
+    fn build_hand(&self, hole: &HoleCards, board: &[Card]) -> Hand {
+        let mut hand = Hand::new();
+        hand.add(hole.high());
+        hand.add(hole.low());
+        for card in board {
+            hand.add(*card);
+        }
+        hand
+    }
+
+    /// Calculate exact equity for heads-up (2 players)
+    ///
     /// # Arguments
     /// * `hole1` - Hole cards of player 1
     /// * `hole2` - Hole cards of player 2
@@ -128,6 +124,8 @@ impl EquityCalculator {
         }
     }
 
+    /// Calculate equity using Monte Carlo simulation for heads-up (2 players)
+    ///
     /// # Arguments
     /// * `hole1` - Hole cards of player 1
     /// * `hole2` - Hole cards of player 2
@@ -187,16 +185,6 @@ impl EquityCalculator {
         }
     }
 
-    fn build_hand(&self, hole: &HoleCards, board: &[Card]) -> Hand {
-        let mut hand = Hand::new();
-        hand.add(hole.high());
-        hand.add(hole.low());
-        for card in board {
-            hand.add(*card);
-        }
-        hand
-    }
-
     fn enumerate_helper(
         &self,
         available: &[Card],
@@ -232,11 +220,13 @@ impl EquityCalculator {
         }
     }
 
+    /// Calculate range vs hand equity (parallel)
+    ///
     /// # Arguments
-    /// * `range` - Range du joueur 1
-    /// * `hole2` - Main du joueur 2
+    /// * `range` - Range of player 1
+    /// * `hole2` - Hand of player 2
     /// * `board` - Cards already on the board
-    /// * `iterations` - Number of Monte Carlo simulations per combo
+    /// * `iterations_per_combo` - Number of Monte Carlo simulations per combo
     pub fn calculate_range_vs_hand(
         &self,
         range: &Range,
@@ -283,11 +273,13 @@ impl EquityCalculator {
         }
     }
 
+    /// Calculate range vs range equity (parallel)
+    ///
     /// # Arguments
     /// * `range1` - Range of player 1
     /// * `range2` - Range of player 2
     /// * `board` - Cards already on the board
-    /// * `iterations` - Number of Monte Carlo simulations per matchup
+    /// * `iterations_per_matchup` - Number of Monte Carlo simulations per matchup
     pub fn calculate_range_vs_range(
         &self,
         range1: &Range,
@@ -317,7 +309,6 @@ impl EquityCalculator {
             .iter()
             .flat_map(|hole1| {
                 combos2.iter().filter_map(move |hole2| {
-                    // Vérifier qu'il n'y a pas de cartes en commun
                     if hole1.high() == hole2.high()
                         || hole1.high() == hole2.low()
                         || hole1.low() == hole2.high()
@@ -363,6 +354,7 @@ impl EquityCalculator {
         }
     }
 
+    /// Calculate range vs range equity (sequential version for benchmarking)
     pub fn calculate_range_vs_range_sequential(
         &self,
         range1: &Range,
@@ -433,26 +425,35 @@ impl EquityCalculator {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct RangeEquityResult {
-    pub range_equity: f64,
-    pub opponent_equity: f64,
-    pub tie_equity: f64,
-    pub combos_evaluated: usize,
-    pub total_simulations: usize,
-}
-
-impl RangeEquityResult {
-    pub fn range_percent(&self) -> f64 {
-        self.range_equity * 100.0
+// Implement multiway equity calculation trait
+impl MultiwayEquityCalculator for EquityCalculator {
+    fn calculate_multiway_monte_carlo(
+        &self,
+        hole_cards: &[HoleCards],
+        board: &[Card],
+        iterations: usize,
+    ) -> MultiPlayerEquityResult {
+        let calculator = MultiwayCalculator::new(&self.evaluator);
+        calculator.calculate_parallel(hole_cards, board, iterations)
     }
 
-    pub fn opponent_percent(&self) -> f64 {
-        self.opponent_equity * 100.0
+    fn calculate_multiway_monte_carlo_sequential(
+        &self,
+        hole_cards: &[HoleCards],
+        board: &[Card],
+        iterations: usize,
+    ) -> MultiPlayerEquityResult {
+        let calculator = MultiwayCalculator::new(&self.evaluator);
+        calculator.calculate_sequential(hole_cards, board, iterations)
     }
 
-    pub fn tie_percent(&self) -> f64 {
-        self.tie_equity * 100.0
+    fn calculate_multiway_exact(
+        &self,
+        hole_cards: &[HoleCards],
+        board: &[Card],
+    ) -> MultiPlayerEquityResult {
+        let calculator = MultiwayCalculator::new(&self.evaluator);
+        calculator.calculate_exact(hole_cards, board)
     }
 }
 

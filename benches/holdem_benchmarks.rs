@@ -373,6 +373,170 @@ fn bench_card_operations(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_multiway_equity(c: &mut Criterion) {
+    let calc = EquityCalculator::new();
+
+    let mut group = c.benchmark_group("multiway_equity");
+
+    // 3 players preflop
+    let three_players = vec![
+        HoleCards::from_str("AsAh").unwrap(),
+        HoleCards::from_str("KcKd").unwrap(),
+        HoleCards::from_str("QhQs").unwrap(),
+    ];
+
+    group.bench_function("3_players_1000_sims", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo(
+                black_box(&three_players),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
+    });
+
+    // 4 players preflop
+    let four_players = vec![
+        HoleCards::from_str("AsAh").unwrap(),
+        HoleCards::from_str("KcKd").unwrap(),
+        HoleCards::from_str("QhQs").unwrap(),
+        HoleCards::from_str("JdJc").unwrap(),
+    ];
+
+    group.bench_function("4_players_1000_sims", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo(
+                black_box(&four_players),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
+    });
+
+    // 6 players preflop
+    let six_players = vec![
+        HoleCards::from_str("AsAh").unwrap(),
+        HoleCards::from_str("KcKd").unwrap(),
+        HoleCards::from_str("QhQs").unwrap(),
+        HoleCards::from_str("JdJc").unwrap(),
+        HoleCards::from_str("ThTd").unwrap(),
+        HoleCards::from_str("9s9h").unwrap(),
+    ];
+
+    group.bench_function("6_players_1000_sims", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo(
+                black_box(&six_players),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
+    });
+
+    // 9 players (full table) preflop
+    let nine_players = vec![
+        HoleCards::from_str("AsAh").unwrap(),
+        HoleCards::from_str("KcKd").unwrap(),
+        HoleCards::from_str("QhQs").unwrap(),
+        HoleCards::from_str("JdJc").unwrap(),
+        HoleCards::from_str("ThTd").unwrap(),
+        HoleCards::from_str("9s9h").unwrap(),
+        HoleCards::from_str("8c8d").unwrap(),
+        HoleCards::from_str("7h7s").unwrap(),
+        HoleCards::from_str("6d6c").unwrap(),
+    ];
+
+    group.bench_function("9_players_1000_sims", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo(
+                black_box(&nine_players),
+                black_box(&[]),
+                black_box(1000),
+            )
+        })
+    });
+
+    // 3 players on river (exact calculation)
+    let board_river = vec![
+        Card::try_from("Ah").unwrap(),
+        Card::try_from("Kd").unwrap(),
+        Card::try_from("Qc").unwrap(),
+        Card::try_from("Jh").unwrap(),
+        Card::try_from("Ts").unwrap(),
+    ];
+
+    group.bench_function("3_players_river_exact", |b| {
+        b.iter(|| calc.calculate_multiway_exact(black_box(&three_players), black_box(&board_river)))
+    });
+
+    group.finish();
+}
+
+fn bench_multiway_parallel_vs_sequential(c: &mut Criterion) {
+    let calc = EquityCalculator::new();
+
+    let mut group = c.benchmark_group("multiway_parallel_vs_sequential");
+
+    // 3 players
+    let three_players = vec![
+        HoleCards::from_str("AsAh").unwrap(),
+        HoleCards::from_str("KcKd").unwrap(),
+        HoleCards::from_str("QhQs").unwrap(),
+    ];
+
+    group.bench_function("3_players_parallel", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo(
+                black_box(&three_players),
+                black_box(&[]),
+                black_box(10000),
+            )
+        })
+    });
+
+    group.bench_function("3_players_sequential", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo_sequential(
+                black_box(&three_players),
+                black_box(&[]),
+                black_box(10000),
+            )
+        })
+    });
+
+    // 6 players
+    let six_players = vec![
+        HoleCards::from_str("AsAh").unwrap(),
+        HoleCards::from_str("KcKd").unwrap(),
+        HoleCards::from_str("QhQs").unwrap(),
+        HoleCards::from_str("JdJc").unwrap(),
+        HoleCards::from_str("ThTd").unwrap(),
+        HoleCards::from_str("9s9h").unwrap(),
+    ];
+
+    group.bench_function("6_players_parallel", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo(
+                black_box(&six_players),
+                black_box(&[]),
+                black_box(10000),
+            )
+        })
+    });
+
+    group.bench_function("6_players_sequential", |b| {
+        b.iter(|| {
+            calc.calculate_multiway_monte_carlo_sequential(
+                black_box(&six_players),
+                black_box(&[]),
+                black_box(10000),
+            )
+        })
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_hand_evaluation,
@@ -383,6 +547,8 @@ criterion_group!(
     bench_range_vs_range_equity,
     bench_range_vs_range_parallel_comparison,
     bench_card_operations,
+    bench_multiway_equity,
+    bench_multiway_parallel_vs_sequential,
 );
 
 criterion_main!(benches);
