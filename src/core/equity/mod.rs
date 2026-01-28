@@ -7,9 +7,9 @@ pub use results::{EquityResult, MultiPlayerEquityResult, RangeEquityResult};
 use super::card::Card;
 use super::card_set::CardSet;
 use super::evaluator::{HandEvaluator, LookupEvaluator};
-use super::hand::{Hand, HoleCards};
+use super::hand::HoleCards;
+use super::helpers;
 use super::range::Range;
-use crate::core::{Suit, Value};
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
 
@@ -34,43 +34,6 @@ impl EquityCalculator {
         }
     }
 
-    fn all_cards() -> Vec<Card> {
-        let values = [
-            Value::Two,
-            Value::Three,
-            Value::Four,
-            Value::Five,
-            Value::Six,
-            Value::Seven,
-            Value::Eight,
-            Value::Nine,
-            Value::Ten,
-            Value::Jack,
-            Value::Queen,
-            Value::King,
-            Value::Ace,
-        ];
-        let suits = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
-
-        let mut cards = Vec::with_capacity(52);
-        for &value in &values {
-            for &suit in &suits {
-                cards.push(Card::new(value, suit));
-            }
-        }
-        cards
-    }
-
-    fn build_hand(&self, hole: &HoleCards, board: &[Card]) -> Hand {
-        let mut hand = Hand::new();
-        hand.add(hole.high());
-        hand.add(hole.low());
-        for card in board {
-            hand.add(*card);
-        }
-        hand
-    }
-
     /// Calculate exact equity for heads-up (2 players)
     ///
     /// # Arguments
@@ -92,7 +55,7 @@ impl EquityCalculator {
             dead_cards.insert(*card);
         }
 
-        let available_cards: Vec<Card> = Self::all_cards()
+        let available_cards: Vec<Card> = helpers::all_cards()
             .into_iter()
             .filter(|c| !dead_cards.contains(*c))
             .collect();
@@ -147,7 +110,7 @@ impl EquityCalculator {
             dead_cards.insert(*card);
         }
 
-        let mut available_cards: Vec<Card> = Self::all_cards()
+        let mut available_cards: Vec<Card> = helpers::all_cards()
             .into_iter()
             .filter(|c| !dead_cards.contains(*c))
             .collect();
@@ -164,8 +127,8 @@ impl EquityCalculator {
             let mut full_board = board.to_vec();
             full_board.extend_from_slice(&available_cards[..cards_needed]);
 
-            let hand1 = self.build_hand(hole1, &full_board);
-            let hand2 = self.build_hand(hole2, &full_board);
+            let hand1 = helpers::build_hand(hole1, &full_board);
+            let hand2 = helpers::build_hand(hole2, &full_board);
 
             let rank1 = self.evaluator.evaluate(&hand1);
             let rank2 = self.evaluator.evaluate(&hand2);
@@ -199,8 +162,8 @@ impl EquityCalculator {
                 full_board.push(available[idx]);
             }
 
-            let hand1 = self.build_hand(ctx.hole1, &full_board);
-            let hand2 = self.build_hand(ctx.hole2, &full_board);
+            let hand1 = helpers::build_hand(ctx.hole1, &full_board);
+            let hand2 = helpers::build_hand(ctx.hole2, &full_board);
 
             let rank1 = self.evaluator.evaluate(&hand1);
             let rank2 = self.evaluator.evaluate(&hand2);

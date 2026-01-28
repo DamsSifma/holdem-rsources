@@ -37,7 +37,7 @@ pub enum Suit {
     Spades,
 }
 
-const VALUES: [Value; 13] = [
+pub const VALUES: [Value; 13] = [
     Value::Two,
     Value::Three,
     Value::Four,
@@ -53,7 +53,7 @@ const VALUES: [Value; 13] = [
     Value::Ace,
 ];
 
-const SUITS: [Suit; 4] = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
+pub const SUITS: [Suit; 4] = [Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 impl TryFrom<char> for Value {
     type Error = ();
 
