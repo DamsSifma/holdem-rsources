@@ -1,3 +1,4 @@
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct EquityResult {
     pub player1_equity: f64,
@@ -21,6 +22,7 @@ impl EquityResult {
 }
 
 /// Result structure for multi-player (3-9 players) equity calculations
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone)]
 pub struct MultiPlayerEquityResult {
     /// Equity for each player (win equity + share of tie equity)
@@ -47,6 +49,7 @@ impl MultiPlayerEquityResult {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct RangeEquityResult {
     pub range_equity: f64,

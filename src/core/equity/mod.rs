@@ -11,6 +11,7 @@ use super::hand::HoleCards;
 use super::helpers;
 use super::range::Range;
 use rand::seq::SliceRandom;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 pub struct EquityCalculator {
@@ -214,8 +215,15 @@ impl EquityCalculator {
             };
         }
 
+        #[cfg(feature = "parallel")]
         let results: Vec<_> = combos
             .par_iter()
+            .map(|hole1| self.calculate_monte_carlo(hole1, hole2, board, iterations_per_combo))
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Vec<_> = combos
+            .iter()
             .map(|hole1| self.calculate_monte_carlo(hole1, hole2, board, iterations_per_combo))
             .collect();
 
@@ -295,8 +303,17 @@ impl EquityCalculator {
             };
         }
 
+        #[cfg(feature = "parallel")]
         let results: Vec<_> = matchups
             .par_iter()
+            .map(|(hole1, hole2)| {
+                self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup)
+            })
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Vec<_> = matchups
+            .iter()
             .map(|(hole1, hole2)| {
                 self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup)
             })
