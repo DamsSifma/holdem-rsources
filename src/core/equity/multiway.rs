@@ -5,6 +5,7 @@ use crate::core::evaluator::{HandEvaluator, LookupEvaluator};
 use crate::core::hand::HoleCards;
 use crate::core::helpers;
 use rand::seq::SliceRandom;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 pub trait MultiwayEquityCalculator {
@@ -106,8 +107,45 @@ impl<'a> MultiwayCalculator<'a> {
         let cards_needed = 5 - board.len();
 
         // Parallel Monte Carlo simulation
+        #[cfg(feature = "parallel")]
         let results: Vec<_> = (0..iterations)
             .into_par_iter()
+            .map(|_| {
+                let mut rng = rand::rng();
+                let mut shuffled = available_cards.clone();
+                shuffled.shuffle(&mut rng);
+
+                let mut full_board = board.to_vec();
+                full_board.extend_from_slice(&shuffled[..cards_needed]);
+
+                // Evaluate all hands
+                let rankings: Vec<_> = hole_cards
+                    .iter()
+                    .map(|hole| {
+                        let hand = helpers::build_hand(hole, &full_board);
+                        self.evaluator.evaluate(&hand)
+                    })
+                    .collect();
+
+                let best_rank = rankings.iter().max().copied().unwrap();
+
+                let winners: Vec<usize> = rankings
+                    .iter()
+                    .enumerate()
+                    .filter_map(
+                        |(idx, &rank)| {
+                            if rank == best_rank { Some(idx) } else { None }
+                        },
+                    )
+                    .collect();
+
+                winners
+            })
+            .collect();
+
+        // Sequential fallback when parallel feature is not enabled
+        #[cfg(not(feature = "parallel"))]
+        let results: Vec<_> = (0..iterations)
             .map(|_| {
                 let mut rng = rand::rng();
                 let mut shuffled = available_cards.clone();

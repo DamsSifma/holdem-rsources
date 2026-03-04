@@ -42,10 +42,10 @@ Janvier 2026
 
 **Sans compromis :**
 
-✅ Zero-cost abstractions  
-✅ Pas de garbage collector  
-✅ Détection des data races à la compilation  
-✅ Gestion mémoire sans malloc/free manuel
+- Zero-cost abstractions
+- Pas de garbage collector
+- Détection des data races à la compilation
+- Gestion mémoire sans malloc/free manuel
 
 ---
 
@@ -434,6 +434,8 @@ let results: Vec<f64> = simulations
     .collect();
 ```
 
+---
+
 **Rayon gère automatiquement :**
 
 - Création du thread pool
@@ -697,9 +699,9 @@ or rax, rbx
 
 **Pas de bugs courants en C/C++ :**
 
-- ✅ Pas de use-after-free
-- ✅ Pas de double-free
-- ✅ Pas de null pointer dereference
+- Pas de use-after-free
+- Pas de double-free
+- Pas de null pointer dereference
 
 **Exemple : Ownership**
 
@@ -790,8 +792,6 @@ pub fn evaluate(&self, hand: &Hand) -> HandRanking {
 
 ## 6. Gestion d'erreurs explicite
 
-**Pas d'exceptions cachées :**
-
 ```rust
 // Parsing de carte peut échouer
 pub fn parse_card(s: &str) -> Result<Card, ParseError> {
@@ -840,7 +840,7 @@ let card = parse_card(input).unwrap_or_default();  // Valeur par défaut
 - Services web haute concurrence
 - Outils CLI et système
 - WebAssembly
-- Embedded systems
+- Systèmes embarqués
 
 **❌ Rust peut être overkill pour :**
 
@@ -855,14 +855,12 @@ let card = parse_card(input).unwrap_or_default();  // Valeur par défaut
 
 **1. Évaluation de mains**
 
-- Algorithme Cactus Kev avec tables de lookup
-- Performance : ~95ns par évaluation (7 cartes)
+- Performance : ~100ns par évaluation (7 cartes)
 - Support de toutes les combinaisons poker
 
 **2. Analyse de ranges**
 
 - Parsing de notation poker (AA, AKs, QQ+, etc.)
-- Calcul de combinaisons avec dead cards
 - Statistiques détaillées (pairs, suited, offsuit)
 
 **3. Calculs d'équité**
@@ -870,21 +868,6 @@ let card = parse_card(input).unwrap_or_default();  // Valeur par défaut
 - Monte Carlo pour approximations rapides
 - Énumération exacte pour précision maximale
 - Range vs Range avec parallélisation Rayon
-
----
-
-## Ressources pour apprendre Rust
-
-**Livres officiels (gratuits) :**
-
-- [The Rust Programming Language](https://doc.rust-lang.org/book/) ("The Book")
-- [Rust by Example](https://doc.rust-lang.org/rust-by-example/)
-- [The Rustonomicon](https://doc.rust-lang.org/nomicon/) (unsafe Rust)
-
-**Exercices pratiques :**
-
-- [Rustlings](https://github.com/rust-lang/rustlings) : Petits exercices
-- [Exercism Rust Track](https://exercism.org/tracks/rust) : Défis progressifs
 
 ---
 
