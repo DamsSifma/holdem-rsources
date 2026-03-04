@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769599343337,
+  "lastUpdate": 1772618799081,
   "repoUrl": "https://github.com/DamsSifma/holdem-rsources",
   "entries": {
     "Rust Benchmark": [
@@ -797,6 +797,312 @@ window.BENCHMARK_DATA = {
             "name": "multiway_parallel_vs_sequential/6_players_sequential",
             "value": 13041157,
             "range": "± 334767",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "119428147+DamsSifma@users.noreply.github.com",
+            "name": "Damien Massif",
+            "username": "DamsSifma"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5f2aa32e0dfe84d12a988e756bad1e4074c3b5f5",
+          "message": "Tweaks pour front (#2)",
+          "timestamp": "2026-03-04T10:56:30+01:00",
+          "tree_id": "65956e152f818d270ff0e1a9d4fe6dfa67dda3c8",
+          "url": "https://github.com/DamsSifma/holdem-rsources/commit/5f2aa32e0dfe84d12a988e756bad1e4074c3b5f5"
+        },
+        "date": 1772618798538,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "hand_evaluation/royal_flush",
+            "value": 24,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/straight_flush",
+            "value": 23,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/four_of_a_kind",
+            "value": 63,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/full_house",
+            "value": 62,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/flush",
+            "value": 23,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/straight",
+            "value": 31,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/three_of_a_kind",
+            "value": 121,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/two_pair",
+            "value": 62,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/one_pair",
+            "value": 125,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/high_card",
+            "value": 53,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "hand_evaluation/seven_card_hand",
+            "value": 139,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_parsing/simple_pairs",
+            "value": 198,
+            "range": "± 5",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_parsing/medium_range",
+            "value": 351,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_parsing/complex_range",
+            "value": 893,
+            "range": "± 4",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_parsing/typical_3bet_range",
+            "value": 1728,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_expansion/small",
+            "value": 302,
+            "range": "± 1",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_expansion/medium",
+            "value": 1702,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_expansion/large",
+            "value": 2829,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_expansion/very_large",
+            "value": 7175,
+            "range": "± 26",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_calculation/preflop_AA_vs_KK",
+            "value": 5468108,
+            "range": "± 21328",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_calculation/preflop_AK_vs_QQ",
+            "value": 5388677,
+            "range": "± 87831",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_calculation/flop_equity",
+            "value": 4830291,
+            "range": "± 34721",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_calculation/turn_equity",
+            "value": 4664187,
+            "range": "± 25701",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_calculation/river_exact",
+            "value": 449,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_simulation_sizes/1000",
+            "value": 546784,
+            "range": "± 2861",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_simulation_sizes/5000",
+            "value": 2737790,
+            "range": "± 8434",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_simulation_sizes/10000",
+            "value": 5464949,
+            "range": "± 25582",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_simulation_sizes/50000",
+            "value": 27409990,
+            "range": "± 389507",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "equity_simulation_sizes/100000",
+            "value": 54620286,
+            "range": "± 162998",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_vs_range_equity/small_ranges_1000",
+            "value": 31721329,
+            "range": "± 134522",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_vs_range_equity/medium_ranges_1000",
+            "value": 83851800,
+            "range": "± 500936",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_vs_range_parallel_vs_sequential/parallel",
+            "value": 71914017,
+            "range": "± 514616",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "range_vs_range_parallel_vs_sequential/sequential",
+            "value": 178567325,
+            "range": "± 835193",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "card_operations/card_creation",
+            "value": 1,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "card_operations/card_parsing",
+            "value": 3,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "card_operations/cardset_insert",
+            "value": 2,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "card_operations/cardset_contains",
+            "value": 1,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "card_operations/holecards_parsing",
+            "value": 18,
+            "range": "± 0",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_equity/3_players_1000_sims",
+            "value": 382362,
+            "range": "± 16103",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_equity/4_players_1000_sims",
+            "value": 456742,
+            "range": "± 15847",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_equity/6_players_1000_sims",
+            "value": 607449,
+            "range": "± 14919",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_equity/9_players_1000_sims",
+            "value": 859657,
+            "range": "± 27215",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_equity/3_players_river_exact",
+            "value": 541,
+            "range": "± 4",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_parallel_vs_sequential/3_players_parallel",
+            "value": 3595363,
+            "range": "± 66012",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_parallel_vs_sequential/3_players_sequential",
+            "value": 7924562,
+            "range": "± 43624",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_parallel_vs_sequential/6_players_parallel",
+            "value": 5682004,
+            "range": "± 76551",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiway_parallel_vs_sequential/6_players_sequential",
+            "value": 13505044,
+            "range": "± 69616",
             "unit": "ns/iter"
           }
         ]
