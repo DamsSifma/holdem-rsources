@@ -1,6 +1,9 @@
 use super::card::Card;
 use super::card_set::CardSet;
 use std::str::FromStr;
+use std::sync::LazyLock;
+
+pub const COMBO_COUNT: usize = 1326;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct HoleCards {
@@ -45,6 +48,67 @@ impl HoleCards {
 
     pub fn cards(&self) -> &[Card; 2] {
         &self.cards
+    }
+
+    /// Returns a canonical combo index in [0, 1325].
+    ///
+    /// Mapping is based on card indices i < j:
+    /// index = j * (j - 1) / 2 + i
+    pub fn combo_index(&self) -> u16 {
+        let a = self.cards[0].index();
+        let b = self.cards[1].index();
+        let (i, j) = if a < b { (a, b) } else { (b, a) };
+
+        let i = u16::from(i);
+        let j = u16::from(j);
+        j * (j - 1) / 2 + i
+    }
+
+    /// Builds hole cards from a canonical combo index in [0, 1325].
+    pub fn from_combo_index(index: u16) -> Option<Self> {
+        if usize::from(index) >= COMBO_COUNT {
+            return None;
+        }
+
+        let mut remaining = index;
+        let mut j = 1u16;
+        while j < 52 && remaining >= j {
+            remaining -= j;
+            j += 1;
+        }
+
+        if j >= 52 {
+            return None;
+        }
+
+        let i = remaining;
+        let high = Card::from_index(j as u8)?;
+        let low = Card::from_index(i as u8)?;
+        Some(Self::new(high, low))
+    }
+
+    /// Returns all 1326 unique two-card combinations.
+    /// The position in this array matches `combo_index()`.
+    pub fn all_combos() -> &'static [HoleCards; COMBO_COUNT] {
+        static ALL: LazyLock<Box<[HoleCards; COMBO_COUNT]>> = LazyLock::new(|| {
+            let mut combos = Vec::with_capacity(COMBO_COUNT);
+
+            for j in 1u8..52 {
+                for i in 0u8..j {
+                    let high = Card::from_index(j).expect("valid card index");
+                    let low = Card::from_index(i).expect("valid card index");
+                    combos.push(HoleCards::new(high, low));
+                }
+            }
+
+            Box::new(
+                combos
+                    .try_into()
+                    .expect("exactly 1326 hole card combinations"),
+            )
+        });
+
+        ALL.as_ref()
     }
 
     pub fn parse(s: &str) -> Option<Self> {
