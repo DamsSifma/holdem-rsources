@@ -10,6 +10,7 @@ use super::evaluator::{HandEvaluator, LookupEvaluator};
 use super::hand::HoleCards;
 use super::helpers;
 use super::range::Range;
+use super::weighted_range::WeightedRange;
 use rand::seq::SliceRandom;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -401,6 +402,182 @@ impl EquityCalculator {
             tie_equity: total_ties / num_matchups,
             combos_evaluated: matchups,
             total_simulations: matchups * iterations_per_matchup,
+        }
+    }
+
+    /// Calculate weighted range vs hand equity.
+    ///
+    /// Each combo contribution is weighted by its frequency in the range.
+    pub fn calculate_weighted_range_vs_hand(
+        &self,
+        range: &WeightedRange,
+        hole2: &HoleCards,
+        board: &[Card],
+        iterations_per_combo: usize,
+    ) -> RangeEquityResult {
+        let mut dead_cards = CardSet::from_cards(&[hole2.high(), hole2.low()]);
+        for card in board {
+            dead_cards.insert(*card);
+        }
+
+        let combos = range.to_hole_cards(Some(dead_cards));
+
+        if combos.is_empty() {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 1.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        #[cfg(feature = "parallel")]
+        let results: Vec<_> = combos
+            .par_iter()
+            .map(|(hole1, weight)| {
+                (
+                    self.calculate_monte_carlo(hole1, hole2, board, iterations_per_combo),
+                    f64::from(*weight),
+                )
+            })
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Vec<_> = combos
+            .iter()
+            .map(|(hole1, weight)| {
+                (
+                    self.calculate_monte_carlo(hole1, hole2, board, iterations_per_combo),
+                    f64::from(*weight),
+                )
+            })
+            .collect();
+
+        let total_weight: f64 = results.iter().map(|(_, w)| *w).sum();
+
+        if total_weight == 0.0 {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 1.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        let weighted_range_wins: f64 = results.iter().map(|(r, w)| r.player1_equity * *w).sum();
+        let weighted_opponent_wins: f64 = results.iter().map(|(r, w)| r.player2_equity * *w).sum();
+        let weighted_ties: f64 = results.iter().map(|(r, w)| r.tie_equity * *w).sum();
+
+        RangeEquityResult {
+            range_equity: weighted_range_wins / total_weight,
+            opponent_equity: weighted_opponent_wins / total_weight,
+            tie_equity: weighted_ties / total_weight,
+            combos_evaluated: combos.len(),
+            total_simulations: combos.len() * iterations_per_combo,
+        }
+    }
+
+    /// Calculate weighted range vs weighted range equity.
+    ///
+    /// Each valid matchup (without card collisions) is weighted by w1 * w2.
+    pub fn calculate_weighted_range_vs_range(
+        &self,
+        range1: &WeightedRange,
+        range2: &WeightedRange,
+        board: &[Card],
+        iterations_per_matchup: usize,
+    ) -> RangeEquityResult {
+        let mut board_cards = CardSet::new();
+        for card in board {
+            board_cards.insert(*card);
+        }
+
+        let combos1 = range1.to_hole_cards(Some(board_cards));
+        let combos2 = range2.to_hole_cards(Some(board_cards));
+
+        if combos1.is_empty() || combos2.is_empty() {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 0.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        let matchups: Vec<_> = combos1
+            .iter()
+            .flat_map(|(hole1, w1)| {
+                combos2.iter().filter_map(move |(hole2, w2)| {
+                    if hole1.high() == hole2.high()
+                        || hole1.high() == hole2.low()
+                        || hole1.low() == hole2.high()
+                        || hole1.low() == hole2.low()
+                    {
+                        None
+                    } else {
+                        Some((*hole1, *hole2, f64::from(*w1) * f64::from(*w2)))
+                    }
+                })
+            })
+            .collect();
+
+        if matchups.is_empty() {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 0.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        #[cfg(feature = "parallel")]
+        let results: Vec<_> = matchups
+            .par_iter()
+            .map(|(hole1, hole2, weight)| {
+                (
+                    self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup),
+                    *weight,
+                )
+            })
+            .collect();
+
+        #[cfg(not(feature = "parallel"))]
+        let results: Vec<_> = matchups
+            .iter()
+            .map(|(hole1, hole2, weight)| {
+                (
+                    self.calculate_monte_carlo(hole1, hole2, board, iterations_per_matchup),
+                    *weight,
+                )
+            })
+            .collect();
+
+        let total_weight: f64 = results.iter().map(|(_, w)| *w).sum();
+
+        if total_weight == 0.0 {
+            return RangeEquityResult {
+                range_equity: 0.0,
+                opponent_equity: 0.0,
+                tie_equity: 0.0,
+                combos_evaluated: 0,
+                total_simulations: 0,
+            };
+        }
+
+        let weighted_range1_wins: f64 = results.iter().map(|(r, w)| r.player1_equity * *w).sum();
+        let weighted_range2_wins: f64 = results.iter().map(|(r, w)| r.player2_equity * *w).sum();
+        let weighted_ties: f64 = results.iter().map(|(r, w)| r.tie_equity * *w).sum();
+
+        RangeEquityResult {
+            range_equity: weighted_range1_wins / total_weight,
+            opponent_equity: weighted_range2_wins / total_weight,
+            tie_equity: weighted_ties / total_weight,
+            combos_evaluated: results.len(),
+            total_simulations: results.len() * iterations_per_matchup,
         }
     }
 }

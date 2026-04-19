@@ -46,7 +46,6 @@ impl Range {
         Ok(range)
     }
 
-    /// Convertit la range en une liste de HoleCards, en tenant compte des cartes mortes
     pub fn to_hole_cards(&self, dead_cards: Option<CardSet>) -> Vec<HoleCards> {
         let mut result = Vec::new();
         let dead = dead_cards.unwrap_or_default();
